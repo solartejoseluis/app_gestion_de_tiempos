@@ -247,3 +247,51 @@ html, body { height: 100%; margin: 0; }
     color: #534AB7;
     border-color: #AFA9EC;
 }
+
+/* ── Modal de procesamiento ───────────────────────────── */
+.proc-section {
+    background: #F8F7FF;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.proc-section-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 10px;
+}
+
+hr.proc-separator {
+    border: 0;
+    border-top: 1px dashed #AFA9EC;
+    margin: 0 0 12px;
+    opacity: 1;
+}
+
+.btn-proc-bifurcacion {
+    border: 1px solid #AFA9EC;
+    color: #534AB7;
+    background: transparent;
+    font-size: 0.8rem;
+}
+
+.btn-proc-bifurcacion:hover {
+    background: #eeecfc;
+    color: #534AB7;
+    border-color: #AFA9EC;
+}
+
+.btn-proc-bifurcacion.active,
+.btn-proc-bifurcacion:active {
+    background: #534AB7;
+    border-color: #534AB7;
+    color: #fff;
+}
+
+.proc-btn-icon {
+    font-size: 1.1rem;
+}
