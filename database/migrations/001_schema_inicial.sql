@@ -74,9 +74,10 @@ CREATE TABLE IF NOT EXISTS proyectos (
     id           INT UNSIGNED  NOT NULL AUTO_INCREMENT,
     usuario_id   INT UNSIGNED  NOT NULL,
     area_id      INT UNSIGNED  NULL DEFAULT NULL,
-    nombre       VARCHAR(200)  NOT NULL,
-    descripcion  TEXT,
-    estado       ENUM('activo','pausa','completado') NOT NULL DEFAULT 'activo',
+    nombre             VARCHAR(200)  NOT NULL,
+    descripcion        TEXT,
+    resultado_deseado  TEXT,
+    estado             ENUM('activo','pausa','completado') NOT NULL DEFAULT 'activo',
     fecha_limite DATE          NULL DEFAULT NULL,
     created_at   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -132,7 +133,11 @@ CREATE TABLE IF NOT EXISTS items (
     fecha_cita       DATETIME      NULL DEFAULT NULL,   -- hora fija (tipo_tiempo='cita')
     fecha_limite     DATE          NULL DEFAULT NULL,
     fecha_delegacion DATE          NULL DEFAULT NULL,
+    fecha_revision   DATE          NULL DEFAULT NULL,   -- para tipo='incubada'
     fecha_completada DATETIME      NULL DEFAULT NULL,
+
+    -- Solo para tipo='referencia'
+    etiquetas        VARCHAR(300)  NULL DEFAULT NULL,
 
     -- Atributos de ejecución (GTD)
     duracion_minutos SMALLINT UNSIGNED NULL DEFAULT NULL,

@@ -71,6 +71,19 @@ class Router
         $this->delete('/inbox/{id}',   'InboxController', 'destroy');
         $this->patch('/inbox/{id}',    'InboxController', 'procesar');
 
+        // Procesamiento de ítems
+        $this->post('/procesar/areas',      'ProcesamientoController', 'areas');
+        $this->post('/procesar/proyectos',  'ProcesamientoController', 'proyectos');
+        $this->post('/procesar/personas',   'ProcesamientoController', 'personas');
+        $this->post('/procesar/contextos',  'ProcesamientoController', 'contextos');
+        $this->post('/procesar/eliminar',   'ProcesamientoController', 'eliminar');
+        $this->post('/procesar/completar',  'ProcesamientoController', 'completar');
+        $this->post('/procesar/incubar',    'ProcesamientoController', 'incubar');
+        $this->post('/procesar/referencia', 'ProcesamientoController', 'referencia');
+        $this->post('/procesar/programar',  'ProcesamientoController', 'programar');
+        $this->post('/procesar/delegar',    'ProcesamientoController', 'delegar');
+        $this->post('/procesar/proyecto',   'ProcesamientoController', 'proyecto');
+
         // Próximas acciones
         $this->get('/acciones',         'AccionesController', 'index');
         $this->patch('/acciones/{id}',  'AccionesController', 'update');
