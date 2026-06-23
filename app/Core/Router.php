@@ -86,10 +86,11 @@ class Router
         $this->post('/procesar/proyecto',   'ProcesamientoController', 'proyecto');
 
         // Próximas acciones
-        $this->get('/acciones',         'AccionesController', 'index');
-        $this->patch('/acciones/{id}',  'AccionesController', 'update');
+        $this->get('/acciones',                  'AccionesController', 'index');
+        $this->post('/acciones/completar',       'AccionesController', 'completar');
+        $this->patch('/acciones/{id}',           'AccionesController', 'update');
         $this->patch('/acciones/{id}/completar', 'AccionesController', 'completar');
-        $this->delete('/acciones/{id}', 'AccionesController', 'destroy');
+        $this->delete('/acciones/{id}',          'AccionesController', 'destroy');
 
         // Proyectos
         $this->get('/proyectos',                    'ProyectosController', 'index');
