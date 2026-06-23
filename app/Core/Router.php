@@ -64,6 +64,7 @@ class Router
         $this->get('/logout',        'AuthController',    'logout');
 
         // Dashboard — Inbox
+        $this->get('/inbox/lista',     'InboxController', 'lista');
         $this->get('/inbox',           'InboxController', 'index');
         $this->post('/inbox/store',    'InboxController', 'store');
         $this->post('/inbox/delete',   'InboxController', 'destroy');

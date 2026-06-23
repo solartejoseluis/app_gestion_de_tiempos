@@ -31,6 +31,14 @@ class InboxController extends Controller
         $this->json($item);
     }
 
+    public function lista(): void
+    {
+        $this->requireAuth();
+        $model = new ItemModel();
+        $items = $model->getInbox((int) $_SESSION['usuario_id']);
+        $this->json($items);
+    }
+
     public function destroy(): void
     {
         $this->requireAuth();

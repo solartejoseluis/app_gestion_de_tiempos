@@ -286,6 +286,8 @@
 
             </div><!-- /.modal-body -->
 
+            <div id="proc-error" class="alert alert-danger d-none mx-3 mb-2 py-2 small" role="alert"></div>
+
             <div class="modal-footer border-0 pt-0 justify-content-start">
                 <button type="button" id="btn-procesar-despues"
                         class="btn btn-sm btn-outline-secondary"

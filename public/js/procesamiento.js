@@ -329,4 +329,140 @@
     configurarFecha('proc-del-seguimiento', 'proc-del-fecha');
     configurarFecha('proc-prog-tiempo',     'proc-prog-fecha');
 
+    // ── Error inline ──────────────────────────────────────────
+    function mostrarError(msg) {
+        const div = el('proc-error');
+        div.textContent = msg;
+        div.classList.remove('d-none');
+    }
+
+    function ocultarError() {
+        el('proc-error').classList.add('d-none');
+    }
+
+    // ── Recarga inbox + badge sidebar ─────────────────────────
+    async function recargarInbox() {
+        try {
+            const res  = await fetch('/inbox/lista');
+            const data = await res.json();
+            if (!data.ok) return;
+
+            // Badge sidebar (siempre actualizar)
+            const badge = document.getElementById('sidebar-inbox-badge');
+            if (badge) {
+                const n = data.data.length;
+                badge.textContent = n;
+                badge.classList.toggle('d-none', n === 0);
+            }
+
+            // Lista (solo si estamos en /inbox)
+            if (typeof window.recargarLista === 'function') {
+                window.recargarLista(data.data);
+            }
+        } catch {
+            // Acción ya procesada — ignorar error de recarga
+        }
+    }
+
+    // ── Patrón común para todos los submits ───────────────────
+    async function postAccion(endpoint, datos, btnEl) {
+        const textoOriginal = btnEl.textContent.trim();
+        btnEl.disabled    = true;
+        btnEl.textContent = 'Guardando...';
+        ocultarError();
+
+        try {
+            const data = await post(endpoint, datos);
+            if (data.ok) {
+                bootstrap.Modal.getInstance(el('modalProcesar')).hide();
+                await recargarInbox();
+            } else {
+                mostrarError(data.error ?? 'Error al procesar. Inténtalo de nuevo.');
+                btnEl.disabled    = false;
+                btnEl.textContent = textoOriginal;
+            }
+        } catch {
+            mostrarError('Error de conexión. Inténtalo de nuevo.');
+            btnEl.disabled    = false;
+            btnEl.textContent = textoOriginal;
+        }
+    }
+
+    // ── Submit: Eliminar ──────────────────────────────────────
+    el('btn-confirmar-eliminar').addEventListener('click', function () {
+        postAccion('/procesar/eliminar', { id: itemId }, this);
+    });
+
+    // ── Submit: Completar ahora ───────────────────────────────
+    el('btn-completar-ahora').addEventListener('click', function () {
+        postAccion('/procesar/completar', { id: itemId }, this);
+    });
+
+    // ── Submit: Incubar ───────────────────────────────────────
+    el('btn-guardar-incubar').addEventListener('click', function () {
+        postAccion('/procesar/incubar', {
+            id:             itemId,
+            proyecto_id:    el('proc-a2-proyecto').value   || '',
+            fecha_revision: el('proc-a2-fecha').value      || '',
+        }, this);
+    });
+
+    // ── Submit: Referencia ────────────────────────────────────
+    el('btn-guardar-referencia').addEventListener('click', function () {
+        postAccion('/procesar/referencia', {
+            id:          itemId,
+            proyecto_id: el('proc-a3-proyecto').value  || '',
+            etiquetas:   el('proc-a3-etiquetas').value || '',
+        }, this);
+    });
+
+    // ── Submit: Proyecto ──────────────────────────────────────
+    el('btn-guardar-proyecto').addEventListener('click', function () {
+        const resultado = el('proc-resultado-deseado').value.trim();
+        const contexto  = el('proc-proyecto-contexto').value;
+        if (!resultado) { mostrarError('El resultado deseado es obligatorio.'); return; }
+        if (!contexto)  { mostrarError('El contexto es obligatorio.');          return; }
+
+        const proyExistente = el('proc-proyecto-existente').value;
+        postAccion('/procesar/proyecto', {
+            id:                itemId,
+            resultado_deseado: resultado,
+            proyecto_id:       proyExistente !== 'nuevo' ? proyExistente : '',
+            nombre_proyecto:   proyExistente === 'nuevo' ? el('proc-nombre-proyecto').value.trim() : '',
+            contexto_id:       contexto,
+            area_id:           el('proc-area').value || '',
+        }, this);
+    });
+
+    // ── Submit: Delegar ───────────────────────────────────────
+    el('btn-guardar-delegar').addEventListener('click', function () {
+        const persona  = el('proc-quien').value;
+        const contexto = el('proc-del-contexto').value;
+        if (!persona || persona === 'yo') { mostrarError('Selecciona una persona a quien delegar.'); return; }
+        if (!contexto)                    { mostrarError('El contexto es obligatorio.');             return; }
+
+        postAccion('/procesar/delegar', {
+            id:          itemId,
+            persona_id:  persona,
+            contexto_id: contexto,
+            proyecto_id: el('proc-del-proyecto').value    || '',
+            tipo_tiempo: el('proc-del-seguimiento').value,
+            fecha_accion: el('proc-del-fecha').value      || '',
+        }, this);
+    });
+
+    // ── Submit: Programar ─────────────────────────────────────
+    el('btn-guardar-programar').addEventListener('click', function () {
+        const contexto = el('proc-prog-contexto').value;
+        if (!contexto) { mostrarError('El contexto es obligatorio.'); return; }
+
+        postAccion('/procesar/programar', {
+            id:          itemId,
+            contexto_id: contexto,
+            proyecto_id: el('proc-prog-proyecto').value || '',
+            tipo_tiempo: el('proc-prog-tiempo').value,
+            fecha_accion: el('proc-prog-fecha').value   || '',
+        }, this);
+    });
+
 })();

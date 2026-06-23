@@ -37,7 +37,12 @@
             <a href="<?= $item['href'] ?>" class="nav-item <?= $currentRoute === $item['href'] ? 'active' : '' ?>">
                 <i class="bi <?= $item['icon'] ?>"></i>
                 <span class="nav-label"><?= $item['label'] ?></span>
-                <?php if ($item['badge_class'] !== null && $item['count'] > 0): ?>
+                <?php if ($item['href'] === '/inbox' && $item['badge_class'] !== null): ?>
+                    <span id="sidebar-inbox-badge"
+                          class="nav-badge <?= $item['badge_class'] ?><?= $item['count'] === 0 ? ' d-none' : '' ?>">
+                        <?= $item['count'] ?>
+                    </span>
+                <?php elseif ($item['badge_class'] !== null && $item['count'] > 0): ?>
                     <span class="nav-badge <?= $item['badge_class'] ?>"><?= $item['count'] ?></span>
                 <?php endif; ?>
             </a>

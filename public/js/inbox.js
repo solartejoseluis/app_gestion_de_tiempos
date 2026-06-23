@@ -99,6 +99,18 @@
         }
     });
 
+    // ── Recarga de lista (llamada desde procesamiento.js) ───
+    window.recargarLista = function (items) {
+        list.querySelectorAll('.item').forEach(e => e.remove());
+        if (items.length === 0) {
+            emptyEl.classList.remove('d-none');
+        } else {
+            emptyEl.classList.add('d-none');
+            items.forEach(item => list.appendChild(crearElemento(item)));
+        }
+        actualizarContador();
+    };
+
     // ── Utilidades ──────────────────────────────────────────
     function escHtml(str) {
         return str
