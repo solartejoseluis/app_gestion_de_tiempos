@@ -37,7 +37,11 @@ $total = count($items);
                         <div class="item-date"><?= $formatFecha($item['created_at']) ?></div>
                     </div>
                     <div class="item-actions">
-                        <button class="btn btn-sm btn-process">Procesar</button>
+                        <button class="btn btn-sm btn-process"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalProcesar"
+                                data-item-id="<?= $item['id'] ?>"
+                                data-item-texto="<?= htmlspecialchars($item['titulo'], ENT_QUOTES) ?>">Procesar</button>
                         <button class="btn btn-sm btn-del"
                                 data-item-id="<?= $item['id'] ?>"
                                 data-bs-toggle="modal"

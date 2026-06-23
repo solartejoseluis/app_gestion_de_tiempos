@@ -31,9 +31,8 @@
                     </select>
                 </div>
 
+                <!-- ── B1 — ¿Requiere acción? ── -->
                 <hr class="proc-separator">
-
-                <!-- B1 — ¿Requiere acción? -->
                 <div id="proc-b1" class="proc-section">
                     <p class="proc-section-label">¿Requiere acción?</p>
                     <div class="d-flex gap-2">
@@ -48,33 +47,27 @@
                     </div>
                 </div>
 
-                <hr class="proc-separator">
-
-                <!-- RAMA A — No accionable -->
-                <div id="proc-rama-a" class="proc-section">
+                <!-- ── RAMA A — No accionable ── -->
+                <hr class="proc-separator d-none" id="sep-rama-a">
+                <div id="proc-rama-a" class="proc-section d-none">
                     <p class="proc-section-label">¿Qué hacemos con esto?</p>
-
-                    <!-- Opciones radio visual -->
                     <div class="d-flex gap-2 mb-3">
                         <button type="button" id="btn-a1"
                                 class="btn btn-sm btn-proc-bifurcacion flex-fill py-3">
-                            <i class="bi bi-trash d-block mb-1 proc-btn-icon"></i>
-                            Eliminar
+                            <i class="bi bi-trash d-block mb-1 proc-btn-icon"></i>Eliminar
                         </button>
                         <button type="button" id="btn-a2"
                                 class="btn btn-sm btn-proc-bifurcacion flex-fill py-3">
-                            <i class="bi bi-clock d-block mb-1 proc-btn-icon"></i>
-                            Incubar
+                            <i class="bi bi-clock d-block mb-1 proc-btn-icon"></i>Incubar
                         </button>
                         <button type="button" id="btn-a3"
                                 class="btn btn-sm btn-proc-bifurcacion flex-fill py-3">
-                            <i class="bi bi-file-text d-block mb-1 proc-btn-icon"></i>
-                            Referencia
+                            <i class="bi bi-file-text d-block mb-1 proc-btn-icon"></i>Referencia
                         </button>
                     </div>
 
                     <!-- A1 — Eliminar -->
-                    <div id="proc-a1-form">
+                    <div id="proc-a1-form" class="d-none">
                         <p class="small text-muted mb-2">
                             Este ítem se moverá a eliminados y no aparecerá en ninguna lista.
                         </p>
@@ -85,7 +78,7 @@
                     </div>
 
                     <!-- A2 — Incubar -->
-                    <div id="proc-a2-form">
+                    <div id="proc-a2-form" class="d-none">
                         <div class="mb-2">
                             <label for="proc-a2-proyecto" class="form-label small mb-1">
                                 Proyecto <span class="text-muted fw-normal">(opcional)</span>
@@ -112,7 +105,7 @@
                     </div>
 
                     <!-- A3 — Referencia -->
-                    <div id="proc-a3-form">
+                    <div id="proc-a3-form" class="d-none">
                         <div class="mb-2">
                             <label for="proc-a3-proyecto" class="form-label small mb-1">
                                 Proyecto <span class="text-muted fw-normal">(opcional)</span>
@@ -134,10 +127,9 @@
                     </div>
                 </div>
 
-                <hr class="proc-separator">
-
-                <!-- B2 — ¿Es un proyecto? -->
-                <div id="proc-b2" class="proc-section">
+                <!-- ── B2 — ¿Es un proyecto? ── -->
+                <hr class="proc-separator d-none" id="sep-b2">
+                <div id="proc-b2" class="proc-section d-none">
                     <p class="proc-section-label">¿Cuántos pasos tiene?</p>
                     <div class="d-flex gap-2 mb-3">
                         <button type="button" id="btn-accion-unica"
@@ -151,30 +143,25 @@
                     </div>
 
                     <!-- Subformulario proyecto -->
-                    <div id="proc-proyecto-form">
+                    <div id="proc-proyecto-form" class="d-none">
                         <div class="mb-2">
                             <label for="proc-resultado-deseado" class="form-label small mb-1">
                                 Resultado deseado <span class="text-danger">*</span>
                             </label>
                             <textarea id="proc-resultado-deseado"
-                                      class="form-control form-control-sm"
-                                      rows="2"
+                                      class="form-control form-control-sm" rows="2"
                                       placeholder="¿Cómo se verá cuando esté completo?"></textarea>
                         </div>
                         <div class="mb-2">
-                            <label for="proc-proyecto-existente" class="form-label small mb-1">
-                                Proyecto
-                            </label>
+                            <label for="proc-proyecto-existente" class="form-label small mb-1">Proyecto</label>
                             <select id="proc-proyecto-existente" class="form-select form-select-sm">
                                 <option value="nuevo">Crear nuevo proyecto</option>
                             </select>
                         </div>
                         <div class="mb-2">
-                            <input id="proc-nombre-proyecto"
-                                   type="text"
+                            <input id="proc-nombre-proyecto" type="text"
                                    class="form-control form-control-sm d-none"
-                                   placeholder="Nombre del nuevo proyecto"
-                                   maxlength="200">
+                                   placeholder="Nombre del nuevo proyecto" maxlength="200">
                         </div>
                         <div class="mb-3">
                             <label for="proc-proyecto-contexto" class="form-label small mb-1">
@@ -191,12 +178,11 @@
                     </div>
                 </div>
 
-                <hr class="proc-separator">
-
-                <!-- B3 — ¿Menos de 2 minutos? -->
-                <div id="proc-b3" class="proc-section">
+                <!-- ── B3 — ¿Menos de 2 minutos? ── -->
+                <hr class="proc-separator d-none" id="sep-b3">
+                <div id="proc-b3" class="proc-section d-none">
                     <p class="proc-section-label">¿Lo puedes hacer ahora mismo?</p>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 mb-2">
                         <button type="button" id="btn-menos-2min"
                                 class="btn btn-sm btn-proc-bifurcacion flex-fill py-2">
                             <i class="bi bi-lightning me-1"></i>Sí, menos de 2 minutos
@@ -206,22 +192,25 @@
                             <i class="bi bi-hourglass me-1"></i>No, toma más tiempo
                         </button>
                     </div>
+                    <!-- Inline: aparece al elegir "menos de 2 min" -->
+                    <button type="button" id="btn-completar-ahora"
+                            class="btn btn-sm btn-success w-100 d-none">
+                        <i class="bi bi-lightning-fill me-1"></i>Marcar como hecho ahora
+                    </button>
                 </div>
 
-                <hr class="proc-separator">
-
-                <!-- B4 — ¿Quién ejecuta? -->
-                <div id="proc-b4" class="proc-section">
+                <!-- ── B4 — ¿Quién ejecuta? ── -->
+                <hr class="proc-separator d-none" id="sep-b4">
+                <div id="proc-b4" class="proc-section d-none">
                     <p class="proc-section-label">¿Quién ejecuta esta acción?</p>
                     <select id="proc-quien" class="form-select form-select-sm">
                         <option value="yo">Yo mismo</option>
                     </select>
                 </div>
 
-                <hr class="proc-separator">
-
-                <!-- DELEGAR -->
-                <div id="proc-delegar" class="proc-section">
+                <!-- ── DELEGAR ── -->
+                <hr class="proc-separator d-none" id="sep-delegar">
+                <div id="proc-delegar" class="proc-section d-none">
                     <p class="proc-section-label">Delegar</p>
                     <div class="mb-2">
                         <label for="proc-del-proyecto" class="form-label small mb-1">
@@ -240,9 +229,7 @@
                         </select>
                     </div>
                     <div class="mb-2">
-                        <label for="proc-del-seguimiento" class="form-label small mb-1">
-                            Seguimiento
-                        </label>
+                        <label for="proc-del-seguimiento" class="form-label small mb-1">Seguimiento</label>
                         <select id="proc-del-seguimiento" class="form-select form-select-sm">
                             <option value="ninguno">Sin fecha</option>
                             <option value="dia">Recordatorio de día</option>
@@ -259,10 +246,9 @@
                     </button>
                 </div>
 
-                <hr class="proc-separator">
-
-                <!-- PROGRAMAR -->
-                <div id="proc-programar" class="proc-section">
+                <!-- ── PROGRAMAR ── -->
+                <hr class="proc-separator d-none" id="sep-programar">
+                <div id="proc-programar" class="proc-section d-none">
                     <p class="proc-section-label">Programar acción</p>
                     <div class="mb-2">
                         <label for="proc-prog-proyecto" class="form-label small mb-1">
@@ -281,9 +267,7 @@
                         </select>
                     </div>
                     <div class="mb-2">
-                        <label for="proc-prog-tiempo" class="form-label small mb-1">
-                            Programación
-                        </label>
+                        <label for="proc-prog-tiempo" class="form-label small mb-1">Programación</label>
                         <select id="proc-prog-tiempo" class="form-select form-select-sm">
                             <option value="ninguno">Sin fecha — próximas acciones</option>
                             <option value="dia">Recordatorio de día</option>
@@ -303,14 +287,13 @@
             </div><!-- /.modal-body -->
 
             <div class="modal-footer border-0 pt-0 justify-content-start">
-                <button type="button"
-                        id="btn-procesar-despues"
+                <button type="button" id="btn-procesar-despues"
                         class="btn btn-sm btn-outline-secondary"
                         data-bs-dismiss="modal">
                     Procesar después
                 </button>
             </div>
 
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-</div><!-- /#modalProcesar -->
+        </div>
+    </div>
+</div>

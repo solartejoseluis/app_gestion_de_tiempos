@@ -1,0 +1,332 @@
+(() => {
+    // ── Estado ────────────────────────────────────────────────
+    let itemId = null;
+
+    // ── Helpers DOM ───────────────────────────────────────────
+    const el = (id) => document.getElementById(id);
+
+    function show(...ids) {
+        ids.forEach(id => el(id)?.classList.remove('d-none'));
+    }
+
+    function hide(...ids) {
+        ids.forEach(id => el(id)?.classList.add('d-none'));
+    }
+
+    // Muestra una sección principal junto con su separador (sep-{id})
+    function showSection(...ids) {
+        ids.forEach(id => {
+            show(id);
+            show('sep-' + id.replace('proc-', ''));
+        });
+    }
+
+    // Oculta una sección principal junto con su separador (sep-{id})
+    function hideSection(...ids) {
+        ids.forEach(id => {
+            hide(id);
+            hide('sep-' + id.replace('proc-', ''));
+        });
+    }
+
+    function setActive(active, ...group) {
+        group.forEach(b => b?.classList.remove('active'));
+        active?.classList.add('active');
+    }
+
+    // ── Fetch helper ──────────────────────────────────────────
+    async function post(url, params = {}) {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(params),
+        });
+        return res.json();
+    }
+
+    // ── Poblar selects ────────────────────────────────────────
+    function poblarSelect(id, items, emptyLabel) {
+        const sel = el(id);
+        if (!sel) return;
+        sel.innerHTML = `<option value="">${emptyLabel}</option>`;
+        items.forEach(({ id: val, nombre }) => {
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.textContent = nombre;
+            sel.appendChild(opt);
+        });
+    }
+
+    async function cargarProyectos(areaId) {
+        const data = await post('/procesar/proyectos', areaId ? { area_id: areaId } : {});
+        if (!data.ok) return;
+
+        ['proc-a2-proyecto', 'proc-a3-proyecto',
+         'proc-del-proyecto', 'proc-prog-proyecto'].forEach(id => {
+            poblarSelect(id, data.data, 'Ninguno');
+        });
+
+        // proc-proyecto-existente: primera opción fija es "Crear nuevo"
+        const selExistente = el('proc-proyecto-existente');
+        selExistente.innerHTML = '<option value="nuevo">Crear nuevo proyecto</option>';
+        data.data.forEach(({ id: val, nombre }) => {
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.textContent = nombre;
+            selExistente.appendChild(opt);
+        });
+    }
+
+    // ── Reset ─────────────────────────────────────────────────
+    function resetModal() {
+        // Ocultar todas las secciones opcionales con sus separadores
+        hideSection(
+            'proc-rama-a', 'proc-b2', 'proc-b3',
+            'proc-b4', 'proc-delegar', 'proc-programar'
+        );
+
+        // Ocultar subforms y campos condicionales
+        hide(
+            'proc-a1-form', 'proc-a2-form', 'proc-a3-form',
+            'proc-proyecto-form',
+            'proc-a2-fecha', 'proc-nombre-proyecto',
+            'proc-del-fecha', 'proc-prog-fecha',
+            'btn-completar-ahora'
+        );
+
+        // Quitar .active de todos los botones de bifurcación
+        document.querySelectorAll('.btn-proc-bifurcacion')
+            .forEach(b => b.classList.remove('active'));
+
+        // Resetear selects a primera opción
+        ['proc-area', 'proc-quien',
+         'proc-a2-fecha-tipo', 'proc-del-seguimiento', 'proc-prog-tiempo',
+         'proc-proyecto-existente'].forEach(id => {
+            const s = el(id);
+            if (s) s.selectedIndex = 0;
+        });
+
+        // Limpiar inputs y textarea
+        ['proc-titulo-input', 'proc-a3-etiquetas', 'proc-nombre-proyecto',
+         'proc-a2-fecha', 'proc-del-fecha', 'proc-prog-fecha'].forEach(id => {
+            const e = el(id);
+            if (e) e.value = '';
+        });
+        const ta = el('proc-resultado-deseado');
+        if (ta) ta.value = '';
+
+        // Restaurar visualización del título
+        const tituloText  = el('proc-titulo-text');
+        const tituloInput = el('proc-titulo-input');
+        if (tituloText)  tituloText.textContent = '';
+        if (tituloInput) tituloInput.classList.add('d-none');
+        tituloText?.classList.remove('d-none');
+
+        // Restaurar tipo de fecha a date (por si se cambió a datetime-local)
+        ['proc-del-fecha', 'proc-prog-fecha'].forEach(id => {
+            const e = el(id);
+            if (e) e.type = 'date';
+        });
+    }
+
+    // ── Modal: abrir ──────────────────────────────────────────
+    const modalEl = el('modalProcesar');
+
+    modalEl.addEventListener('show.bs.modal', async (e) => {
+        const trigger = e.relatedTarget;
+        itemId = trigger?.dataset.itemId  ?? null;
+        const texto = trigger?.dataset.itemTexto ?? '';
+
+        resetModal();
+        el('proc-titulo-text').textContent = texto;
+
+        // Cargar catálogos en paralelo
+        const [areasData, personasData, contextosData] = await Promise.all([
+            post('/procesar/areas'),
+            post('/procesar/personas'),
+            post('/procesar/contextos'),
+        ]);
+
+        if (areasData.ok) {
+            poblarSelect('proc-area', areasData.data, 'Selecciona un área');
+        }
+
+        if (personasData.ok) {
+            const sel = el('proc-quien');
+            sel.innerHTML = '<option value="yo">Yo mismo</option>';
+            personasData.data.forEach(({ id: val, nombre }) => {
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = nombre;
+                sel.appendChild(opt);
+            });
+        }
+
+        if (contextosData.ok) {
+            ['proc-del-contexto', 'proc-prog-contexto', 'proc-proyecto-contexto']
+                .forEach(id => poblarSelect(id, contextosData.data, 'Selecciona un contexto'));
+        }
+    });
+
+    // ── Modal: cerrar ─────────────────────────────────────────
+    modalEl.addEventListener('hidden.bs.modal', () => {
+        itemId = null;
+        resetModal();
+    });
+
+    // ── Editar título ─────────────────────────────────────────
+    el('btn-editar-titulo').addEventListener('click', () => {
+        const span  = el('proc-titulo-text');
+        const input = el('proc-titulo-input');
+        const editing = !input.classList.contains('d-none');
+
+        if (editing) {
+            const val = input.value.trim();
+            if (val) span.textContent = val;
+            input.classList.add('d-none');
+            span.classList.remove('d-none');
+        } else {
+            input.value = span.textContent;
+            span.classList.add('d-none');
+            input.classList.remove('d-none');
+            input.focus();
+            input.select();
+        }
+    });
+
+    el('proc-titulo-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') el('btn-editar-titulo').click();
+        if (e.key === 'Escape') {
+            el('proc-titulo-input').classList.add('d-none');
+            el('proc-titulo-text').classList.remove('d-none');
+        }
+    });
+
+    // ── Área → cargar proyectos ───────────────────────────────
+    el('proc-area').addEventListener('change', async (e) => {
+        if (e.target.value) await cargarProyectos(e.target.value);
+    });
+
+    // ── B1 — ¿Requiere acción? ────────────────────────────────
+    const btnSi = el('btn-si-accion');
+    const btnNo = el('btn-no-accion');
+
+    btnSi.addEventListener('click', () => {
+        setActive(btnSi, btnSi, btnNo);
+        hideSection('proc-rama-a');
+        showSection('proc-b2');
+    });
+
+    btnNo.addEventListener('click', () => {
+        setActive(btnNo, btnSi, btnNo);
+        hideSection('proc-b2', 'proc-b3', 'proc-b4', 'proc-delegar', 'proc-programar');
+        hide('proc-a1-form', 'proc-a2-form', 'proc-a3-form', 'btn-completar-ahora');
+        showSection('proc-rama-a');
+    });
+
+    // ── Rama A — radio visual ─────────────────────────────────
+    const btnA1 = el('btn-a1');
+    const btnA2 = el('btn-a2');
+    const btnA3 = el('btn-a3');
+
+    function seleccionarSubformA(activeBtn, formId) {
+        setActive(activeBtn, btnA1, btnA2, btnA3);
+        hide('proc-a1-form', 'proc-a2-form', 'proc-a3-form');
+        show(formId);
+    }
+
+    btnA1.addEventListener('click', () => seleccionarSubformA(btnA1, 'proc-a1-form'));
+    btnA2.addEventListener('click', () => seleccionarSubformA(btnA2, 'proc-a2-form'));
+    btnA3.addEventListener('click', () => seleccionarSubformA(btnA3, 'proc-a3-form'));
+
+    // ── A2 — fecha revisión ───────────────────────────────────
+    el('proc-a2-fecha-tipo').addEventListener('change', (e) => {
+        const fechaEl = el('proc-a2-fecha');
+        if (e.target.value === 'fecha') {
+            show('proc-a2-fecha');
+        } else {
+            hide('proc-a2-fecha');
+            fechaEl.value = '';
+        }
+    });
+
+    // ── B2 — ¿Es un proyecto? ─────────────────────────────────
+    const btnAccionUnica = el('btn-accion-unica');
+    const btnEsProyecto  = el('btn-es-proyecto');
+
+    btnAccionUnica.addEventListener('click', () => {
+        setActive(btnAccionUnica, btnAccionUnica, btnEsProyecto);
+        hide('proc-proyecto-form');
+        hideSection('proc-b4', 'proc-delegar', 'proc-programar');
+        hide('btn-completar-ahora');
+        showSection('proc-b3');
+    });
+
+    btnEsProyecto.addEventListener('click', () => {
+        setActive(btnEsProyecto, btnAccionUnica, btnEsProyecto);
+        hideSection('proc-b3', 'proc-b4', 'proc-delegar', 'proc-programar');
+        hide('btn-completar-ahora');
+        show('proc-proyecto-form');
+    });
+
+    // ── Proyecto existente vs nuevo ───────────────────────────
+    el('proc-proyecto-existente').addEventListener('change', (e) => {
+        if (e.target.value === 'nuevo') {
+            show('proc-nombre-proyecto');
+            el('proc-nombre-proyecto').focus();
+        } else {
+            hide('proc-nombre-proyecto');
+            el('proc-nombre-proyecto').value = '';
+        }
+    });
+
+    // ── B3 — ¿Menos de 2 minutos? ────────────────────────────
+    const btnMenos2 = el('btn-menos-2min');
+    const btnMas2   = el('btn-mas-2min');
+
+    btnMenos2.addEventListener('click', () => {
+        setActive(btnMenos2, btnMenos2, btnMas2);
+        hideSection('proc-b4', 'proc-delegar', 'proc-programar');
+        show('btn-completar-ahora');
+    });
+
+    btnMas2.addEventListener('click', () => {
+        setActive(btnMas2, btnMenos2, btnMas2);
+        hide('btn-completar-ahora');
+        showSection('proc-b4');
+        // proc-quien comienza en "yo mismo", mostrar programar por defecto
+        hide('proc-delegar');
+        hide('sep-delegar');
+        showSection('proc-programar');
+    });
+
+    // ── B4 — ¿Quién ejecuta? ─────────────────────────────────
+    el('proc-quien').addEventListener('change', (e) => {
+        if (e.target.value === 'yo') {
+            hideSection('proc-delegar');
+            showSection('proc-programar');
+        } else {
+            hideSection('proc-programar');
+            showSection('proc-delegar');
+        }
+    });
+
+    // ── Seguimiento y programación → fecha dinámica ───────────
+    function configurarFecha(selectId, inputId) {
+        el(selectId).addEventListener('change', (e) => {
+            const fechaEl = el(inputId);
+            const val = e.target.value;
+            if (val === 'ninguno') {
+                hide(inputId);
+                fechaEl.value = '';
+            } else {
+                fechaEl.type = val === 'cita' ? 'datetime-local' : 'date';
+                show(inputId);
+            }
+        });
+    }
+
+    configurarFecha('proc-del-seguimiento', 'proc-del-fecha');
+    configurarFecha('proc-prog-tiempo',     'proc-prog-fecha');
+
+})();
