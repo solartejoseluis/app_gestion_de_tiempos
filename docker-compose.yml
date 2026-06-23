@@ -1,4 +1,3 @@
-version: "3.9"
 
 services:
 
@@ -9,7 +8,9 @@ services:
     container_name: gtd_app
     restart: unless-stopped
     volumes:
-      - .:/var/www/html
+      - .:/var/www/html:z
+    ports:
+      - "80:80"
     depends_on:
       - db
     networks:
@@ -26,7 +27,7 @@ services:
       MARIADB_PASSWORD:      ${DB_PASSWORD}
     volumes:
       - gtd_db_data:/var/lib/mysql
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./database/migrations/001_schema_inicial.sql:/docker-entrypoint-initdb.d/01_schema.sql:z
     ports:
       - "3306:3306"
     networks:
