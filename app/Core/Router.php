@@ -64,10 +64,12 @@ class Router
         $this->get('/logout',        'AuthController',    'logout');
 
         // Dashboard — Inbox
-        $this->get('/inbox',         'InboxController',   'index');
-        $this->post('/inbox',        'InboxController',   'store');
-        $this->delete('/inbox/{id}', 'InboxController',   'destroy');
-        $this->patch('/inbox/{id}',  'InboxController',   'procesar');
+        $this->get('/inbox',           'InboxController', 'index');
+        $this->post('/inbox/store',    'InboxController', 'store');
+        $this->post('/inbox/delete',   'InboxController', 'destroy');
+        $this->post('/inbox',          'InboxController', 'store');
+        $this->delete('/inbox/{id}',   'InboxController', 'destroy');
+        $this->patch('/inbox/{id}',    'InboxController', 'procesar');
 
         // Próximas acciones
         $this->get('/acciones',         'AccionesController', 'index');

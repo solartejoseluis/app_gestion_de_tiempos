@@ -114,3 +114,136 @@ html, body { height: 100%; margin: 0; }
     border-top: 1px solid #eeeeee;
     padding: 6px 0;
 }
+
+/* ── Inbox module ─────────────────────────────────────── */
+.inbox-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.inbox-header {
+    padding: 18px 24px 14px;
+    background: #fff;
+    border-bottom: 1px solid #eeeeee;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.inbox-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0;
+}
+
+.inbox-list {
+    flex: 1;
+    padding: 14px 24px;
+    overflow-y: auto;
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #ffffff;
+    border: 1px solid #ebebeb;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 6px;
+}
+
+.item-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.item-text {
+    font-size: 0.875rem;
+    color: #1a1a1a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.item-date {
+    font-size: 0.72rem;
+    color: #b0b0b0;
+    margin-top: 2px;
+}
+
+.item-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.btn-process {
+    border: 1px solid #AFA9EC;
+    color: #534AB7;
+    background: transparent;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+}
+
+.btn-process:hover {
+    background: #f0eeff;
+    color: #534AB7;
+    border-color: #AFA9EC;
+}
+
+.btn-del {
+    border: 1px solid #e57373;
+    color: #c62828;
+    background: transparent;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+}
+
+.btn-del:hover {
+    background: #ffeaea;
+    color: #c62828;
+    border-color: #e57373;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 64px 0;
+    color: #c0c0c0;
+}
+
+.empty-state i {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.capture {
+    border-top: 1px solid #e8e8e8;
+    background: #ffffff;
+    padding: 12px 24px;
+    position: sticky;
+    bottom: 0;
+}
+
+.btn-capture {
+    border: 1px solid #AFA9EC;
+    color: #534AB7;
+    background: transparent;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    padding: 4px 14px;
+}
+
+.btn-capture:hover {
+    background: #f0eeff;
+    color: #534AB7;
+    border-color: #AFA9EC;
+}
