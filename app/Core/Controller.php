@@ -42,6 +42,18 @@ class Controller
         }
     }
 
+    protected function layout(string $view, array $data = []): void
+    {
+        extract($data);
+        $contentView = BASE_PATH . '/app/Views/' . str_replace('.', '/', $view) . '.php';
+        if (!file_exists($contentView)) {
+            throw new RuntimeException("Vista no encontrada: {$view}");
+        }
+        $counters    = SidebarCounters::get((int) $_SESSION['usuario_id']);
+        $layoutPath  = BASE_PATH . '/app/Views/layouts/dashboard.php';
+        require $layoutPath;
+    }
+
     protected function input(string $key, mixed $default = null): mixed
     {
         return $_POST[$key] ?? $_GET[$key] ?? $default;

@@ -1,0 +1,116 @@
+/* ── Layout ───────────────────────────────────────────── */
+html, body { height: 100%; margin: 0; }
+
+.app-shell {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 200px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border-right: 1px solid #e8e8e8;
+    overflow-y: auto;
+}
+
+.main {
+    flex: 1;
+    overflow-y: auto;
+    background: #f7f7f8;
+}
+
+/* ── Sidebar header ───────────────────────────────────── */
+.sidebar-header {
+    padding: 20px 16px 14px;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.sidebar-header .user-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-header .user-sub {
+    font-size: 0.7rem;
+    color: #888;
+    margin-top: 2px;
+}
+
+/* ── Navegación ───────────────────────────────────────── */
+.sidebar-nav {
+    flex: 1;
+    padding: 8px 0;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px 7px 14px;
+    border-left: 2px solid transparent;
+    text-decoration: none;
+    color: #333333;
+    font-size: 0.8rem;
+    transition: background 0.1s;
+    white-space: nowrap;
+}
+
+.nav-item:hover {
+    background: #f5f5f5;
+    color: #333333;
+    text-decoration: none;
+}
+
+.nav-item.active {
+    border-left-color: #534AB7;
+    color: #534AB7;
+    background: #f8f7ff;
+    font-weight: 500;
+}
+
+.nav-item i {
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.nav-item .nav-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-separator {
+    height: 1px;
+    background: #eeeeee;
+    margin: 6px 14px;
+}
+
+/* ── Badges ───────────────────────────────────────────── */
+.nav-badge {
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 10px;
+    line-height: 1.5;
+    flex-shrink: 0;
+}
+
+.badge-purple { background: #EEEDFE; color: #3C3489; }
+.badge-blue   { background: #E6F1FB; color: #0C447C; }
+.badge-coral  { background: #FAECE7; color: #712B13; }
+.badge-amber  { background: #FAEEDA; color: #633806; }
+.badge-warn   { background: #FCEBEB; color: #791F1F; }
+
+/* ── Sidebar footer ───────────────────────────────────── */
+.sidebar-footer {
+    border-top: 1px solid #eeeeee;
+    padding: 6px 0;
+}
