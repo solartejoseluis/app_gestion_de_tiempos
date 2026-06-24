@@ -81,4 +81,44 @@ class ProyectosController extends Controller
         }
         $this->json(null);
     }
+
+    public function stats(): void
+    {
+        $this->requireAuth();
+        $uid = (int) $_SESSION['usuario_id'];
+        $id  = (int) ($_GET['id'] ?? 0);
+
+        if ($id <= 0) {
+            $this->error('ID inválido.');
+        }
+
+        $db   = Database::connection();
+        $stmt = $db->prepare("
+            SELECT
+                SUM(CASE WHEN i.id IS NOT NULL AND i.deleted_at IS NULL
+                         THEN 1 ELSE 0 END)                                       AS total_items,
+                SUM(CASE WHEN i.id IS NOT NULL AND i.tipo = 'completada'
+                              AND i.deleted_at IS NULL
+                         THEN 1 ELSE 0 END)                                       AS items_completados,
+                SUM(CASE WHEN i.id IS NOT NULL
+                              AND i.tipo IN ('accion','proyecto_accion')
+                              AND i.deleted_at IS NULL
+                         THEN 1 ELSE 0 END)                                       AS proximas_acciones
+            FROM proyectos p
+            LEFT JOIN items i ON i.proyecto_id = p.id
+            WHERE p.id = ? AND p.usuario_id = ? AND p.deleted_at IS NULL
+        ");
+        $stmt->execute([$id, $uid]);
+        $row = $stmt->fetch();
+
+        if (!$row) {
+            $this->error('No encontrado.', 404);
+        }
+
+        $this->json([
+            'total_items'       => (int) $row['total_items'],
+            'items_completados' => (int) $row['items_completados'],
+            'proximas_acciones' => (int) $row['proximas_acciones'],
+        ]);
+    }
 }

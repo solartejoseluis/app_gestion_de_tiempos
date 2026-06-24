@@ -256,6 +256,49 @@ class ProcesamientoController extends Controller
         $this->json(null);
     }
 
+    public function nuevaAccion(): void
+    {
+        $this->requireAuth();
+
+        $titulo = trim($this->input('titulo', ''));
+        if ($titulo === '') {
+            $this->error('El título es obligatorio.');
+        }
+
+        $contextoId = (int) $this->input('contexto_id', 0);
+        if ($contextoId <= 0) {
+            $this->error('El contexto es obligatorio.');
+        }
+
+        $proyectoId  = $this->intONull('proyecto_id');
+        $areaId      = $this->intONull('area_id');
+        $tipoTiempo  = $this->tipoTiempoValido($this->input('tipo_tiempo', 'ninguno'));
+        $fechaAccion = $this->fechaONull('fecha_accion');
+        $personaId   = $this->intONull('persona_id');
+
+        $datos = [
+            'usuario_id'  => $this->uid(),
+            'titulo'      => $titulo,
+            'tipo'        => 'proyecto_accion',
+            'contexto_id' => $contextoId,
+            'tipo_tiempo' => $tipoTiempo,
+        ];
+
+        if ($proyectoId !== null)  $datos['proyecto_id']  = $proyectoId;
+        if ($areaId !== null)      $datos['area_id']       = $areaId;
+        if ($fechaAccion !== null) $datos['fecha_accion']  = $fechaAccion;
+        if ($personaId !== null)   $datos['persona_id']    = $personaId;
+
+        $cols   = implode(', ', array_keys($datos));
+        $places = implode(', ', array_fill(0, count($datos), '?'));
+        $db     = Database::connection();
+        $db->prepare("INSERT INTO items ({$cols}) VALUES ({$places})")
+           ->execute(array_values($datos));
+        $id = (int) $db->lastInsertId();
+
+        $this->json(['id' => $id]);
+    }
+
     public function proyecto(): void
     {
         $this->requireAuth();

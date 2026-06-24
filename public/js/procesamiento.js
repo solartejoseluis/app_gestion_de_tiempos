@@ -1,6 +1,9 @@
 (() => {
     // ── Estado ────────────────────────────────────────────────
-    let itemId = null;
+    let itemId         = null;
+    let modo           = '';
+    let modoProyectoId = null;
+    let modoAreaId     = '';
 
     // ── Helpers DOM ───────────────────────────────────────────
     const el = (id) => document.getElementById(id);
@@ -69,6 +72,16 @@
 
     // ── Reset ─────────────────────────────────────────────────
     function resetModal() {
+        // Limpiar estado de modo proyecto
+        modo           = '';
+        modoProyectoId = null;
+        modoAreaId     = '';
+
+        // Restaurar secciones que pueden ocultarse en modo proyecto
+        show('proc-header', 'sep-b1', 'proc-b1', 'proc-prog-proyecto-wrap');
+        hide('proc-modo-proyecto');
+        el('modalProcesarLabel').textContent = 'Procesar ítem';
+
         // Ocultar todas las secciones opcionales con sus separadores
         hideSection(
             'proc-rama-a', 'proc-b2', 'proc-b3',
@@ -96,7 +109,7 @@
         });
 
         // Limpiar inputs y textarea
-        ['proc-titulo-input', 'proc-a3-etiquetas',
+        ['proc-titulo-input', 'proc-a3-etiquetas', 'proc-nueva-titulo',
          'proc-a2-fecha', 'proc-del-fecha', 'proc-prog-fecha'].forEach(id => {
             const e = el(id);
             if (e) e.value = '';
@@ -123,37 +136,74 @@
 
     modalEl.addEventListener('show.bs.modal', async (e) => {
         const trigger = e.relatedTarget;
-        itemId = trigger?.dataset.itemId  ?? null;
+        itemId = trigger?.dataset.itemId ?? null;
         const texto = trigger?.dataset.itemTexto ?? '';
 
         resetModal();
         el('proc-titulo-text').textContent = texto;
+        modo = trigger?.dataset.modo ?? '';
 
-        // Cargar catálogos en paralelo
-        const [areasData, personasData, contextosData] = await Promise.all([
-            post('/procesar/areas'),
-            post('/procesar/personas'),
-            post('/procesar/contextos'),
-        ]);
+        if (modo === 'agregar-accion') {
+            modoProyectoId = trigger.dataset.proyectoId ?? null;
+            modoAreaId     = trigger.dataset.areaId ?? '';
+            el('proc-nombre-proyecto-label').textContent = trigger.dataset.proyectoNombre ?? '';
+            show('proc-modo-proyecto');
+            hide('proc-header');
+            hideSection('proc-b1');
+            el('modalProcesarLabel').textContent = 'Agregar acción al proyecto';
 
-        if (areasData.ok) {
-            poblarSelect('proc-area', areasData.data, 'Selecciona un área');
-        }
+            const [personasData, contextosData] = await Promise.all([
+                post('/procesar/personas'),
+                post('/procesar/contextos'),
+            ]);
 
-        if (personasData.ok) {
-            const sel = el('proc-quien');
-            sel.innerHTML = '<option value="yo">Yo mismo</option>';
-            personasData.data.forEach(({ id: val, nombre }) => {
-                const opt = document.createElement('option');
-                opt.value = val;
-                opt.textContent = nombre;
-                sel.appendChild(opt);
-            });
-        }
+            if (personasData.ok) {
+                const sel = el('proc-quien');
+                sel.innerHTML = '<option value="yo">Yo mismo</option>';
+                personasData.data.forEach(({ id: val, nombre }) => {
+                    const opt = document.createElement('option');
+                    opt.value = val;
+                    opt.textContent = nombre;
+                    sel.appendChild(opt);
+                });
+            }
 
-        if (contextosData.ok) {
-            ['proc-del-contexto', 'proc-prog-contexto']
-                .forEach(id => poblarSelect(id, contextosData.data, 'Selecciona un contexto'));
+            if (contextosData.ok) {
+                ['proc-del-contexto', 'proc-prog-contexto']
+                    .forEach(id => poblarSelect(id, contextosData.data, 'Selecciona un contexto'));
+            }
+
+            showSection('proc-b4');
+            hide('proc-delegar', 'sep-delegar');
+            showSection('proc-programar');
+            hide('proc-prog-proyecto-wrap');
+
+        } else {
+            const [areasData, personasData, contextosData] = await Promise.all([
+                post('/procesar/areas'),
+                post('/procesar/personas'),
+                post('/procesar/contextos'),
+            ]);
+
+            if (areasData.ok) {
+                poblarSelect('proc-area', areasData.data, 'Selecciona un área');
+            }
+
+            if (personasData.ok) {
+                const sel = el('proc-quien');
+                sel.innerHTML = '<option value="yo">Yo mismo</option>';
+                personasData.data.forEach(({ id: val, nombre }) => {
+                    const opt = document.createElement('option');
+                    opt.value = val;
+                    opt.textContent = nombre;
+                    sel.appendChild(opt);
+                });
+            }
+
+            if (contextosData.ok) {
+                ['proc-del-contexto', 'proc-prog-contexto']
+                    .forEach(id => poblarSelect(id, contextosData.data, 'Selecciona un contexto'));
+            }
         }
     });
 
@@ -318,6 +368,44 @@
         el('proc-error').classList.add('d-none');
     }
 
+    // ── Recarga stats de un proyecto en la vista /proyectos ───
+    async function recargarProyecto(proyectoId) {
+        if (!proyectoId) return;
+        try {
+            const res  = await fetch(`/proyectos/stats?id=${proyectoId}`);
+            const data = await res.json();
+            if (!data.ok) return;
+
+            const card = document.querySelector(`.proyecto-card[data-id="${proyectoId}"]`);
+            if (!card) return;
+
+            const total = parseInt(data.data.total_items, 10);
+            const comp  = parseInt(data.data.items_completados, 10);
+            const prox  = parseInt(data.data.proximas_acciones, 10);
+            const pct   = total > 0 ? Math.round(comp / total * 100) : 0;
+
+            const bar = card.querySelector('.progress-bar');
+            if (bar) {
+                bar.style.width = pct + '%';
+                bar.setAttribute('aria-valuenow', pct);
+            }
+
+            const statsEl = card.querySelector('.proyecto-stats');
+            if (statsEl) {
+                statsEl.innerHTML =
+                    `${comp} de ${total} acciones completadas &mdash; ` +
+                    `<span class="proyecto-prox${prox === 0 ? ' text-danger fw-semibold' : ''}">` +
+                    `${prox} próxima${prox !== 1 ? 's' : ''}</span>`;
+            }
+
+            if (prox > 0) {
+                card.querySelector('.alert-danger')?.classList.add('d-none');
+            }
+        } catch {
+            // Ignorar errores de recarga de stats
+        }
+    }
+
     // ── Recarga inbox + badge sidebar ─────────────────────────
     async function recargarInbox() {
         try {
@@ -343,7 +431,7 @@
     }
 
     // ── Patrón común para todos los submits ───────────────────
-    async function postAccion(endpoint, datos, btnEl) {
+    async function postAccion(endpoint, datos, btnEl, onSuccess = null) {
         const textoOriginal = btnEl.textContent.trim();
         btnEl.disabled    = true;
         btnEl.textContent = 'Guardando...';
@@ -354,6 +442,7 @@
             if (data.ok) {
                 bootstrap.Modal.getInstance(el('modalProcesar')).hide();
                 await recargarInbox();
+                if (onSuccess) await onSuccess();
             } else {
                 mostrarError(data.error ?? 'Error al procesar. Inténtalo de nuevo.');
                 btnEl.disabled    = false;
@@ -428,13 +517,28 @@
         const contexto = el('proc-prog-contexto').value;
         if (!contexto) { mostrarError('El contexto es obligatorio.'); return; }
 
-        postAccion('/procesar/programar', {
-            id:          itemId,
-            contexto_id: contexto,
-            proyecto_id: el('proc-prog-proyecto').value || '',
-            tipo_tiempo: el('proc-prog-tiempo').value,
-            fecha_accion: el('proc-prog-fecha').value   || '',
-        }, this);
+        if (modo === 'agregar-accion') {
+            const titulo = el('proc-nueva-titulo')?.value.trim() ?? '';
+            if (!titulo) { mostrarError('El título de la acción es obligatorio.'); return; }
+
+            const proyId = modoProyectoId;
+            postAccion('/procesar/nueva-accion', {
+                titulo,
+                contexto_id:  contexto,
+                proyecto_id:  proyId ?? '',
+                area_id:      modoAreaId,
+                tipo_tiempo:  el('proc-prog-tiempo').value,
+                fecha_accion: el('proc-prog-fecha').value || '',
+            }, this, () => recargarProyecto(proyId));
+        } else {
+            postAccion('/procesar/programar', {
+                id:           itemId,
+                contexto_id:  contexto,
+                proyecto_id:  el('proc-prog-proyecto').value || '',
+                tipo_tiempo:  el('proc-prog-tiempo').value,
+                fecha_accion: el('proc-prog-fecha').value   || '',
+            }, this);
+        }
     });
 
 })();

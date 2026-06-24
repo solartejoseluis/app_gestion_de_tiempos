@@ -100,7 +100,10 @@
                                 <button class="btn btn-sm btn-outline-primary btn-agregar-accion"
                                         data-bs-toggle="modal"
                                         data-bs-target="#modalProcesar"
-                                        data-proyecto-id="<?= $p['id'] ?>">
+                                        data-modo="agregar-accion"
+                                        data-proyecto-id="<?= $p['id'] ?>"
+                                        data-proyecto-nombre="<?= htmlspecialchars($p['nombre']) ?>"
+                                        data-area-id="<?= $p['area_id'] ?? '' ?>">
                                     <i class="bi bi-plus me-1"></i>Agregar acción
                                 </button>
                                 <button class="btn btn-sm btn-pausar-proyecto <?= $pausa ? 'd-none' : '' ?>"

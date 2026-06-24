@@ -10,6 +10,24 @@
 
             <div class="modal-body pt-2">
 
+                <!-- MODO PROYECTO — visible solo al agregar acción desde un proyecto -->
+                <div id="proc-modo-proyecto" class="d-none">
+                    <div class="alert alert-light border py-2 px-3 mb-3 small">
+                        <i class="bi bi-folder me-1"></i>
+                        Agregando acción al proyecto:
+                        <strong id="proc-nombre-proyecto-label"></strong>
+                    </div>
+                    <div class="mb-3">
+                        <label for="proc-nueva-titulo" class="form-label small mb-1">
+                            Título de la acción <span class="text-danger">*</span>
+                        </label>
+                        <input id="proc-nueva-titulo" type="text"
+                               class="form-control form-control-sm"
+                               placeholder="¿Cuál es la próxima acción concreta?"
+                               maxlength="255">
+                    </div>
+                </div>
+
                 <!-- ENCABEZADO — siempre visible -->
                 <div id="proc-header" class="proc-section">
                     <div class="d-flex align-items-center gap-2 mb-3">
@@ -32,7 +50,7 @@
                 </div>
 
                 <!-- ── B1 — ¿Requiere acción? ── -->
-                <hr class="proc-separator">
+                <hr class="proc-separator" id="sep-b1">
                 <div id="proc-b1" class="proc-section">
                     <p class="proc-section-label">¿Requiere acción?</p>
                     <div class="d-flex gap-2">
@@ -231,7 +249,7 @@
                 <hr class="proc-separator d-none" id="sep-programar">
                 <div id="proc-programar" class="proc-section d-none">
                     <p class="proc-section-label">Programar acción</p>
-                    <div class="mb-2">
+                    <div id="proc-prog-proyecto-wrap" class="mb-2">
                         <label for="proc-prog-proyecto" class="form-label small mb-1">
                             Proyecto <span class="text-muted fw-normal">(opcional)</span>
                         </label>

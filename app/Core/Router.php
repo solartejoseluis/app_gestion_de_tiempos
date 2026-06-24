@@ -83,7 +83,8 @@ class Router
         $this->post('/procesar/referencia', 'ProcesamientoController', 'referencia');
         $this->post('/procesar/programar',  'ProcesamientoController', 'programar');
         $this->post('/procesar/delegar',    'ProcesamientoController', 'delegar');
-        $this->post('/procesar/proyecto',   'ProcesamientoController', 'proyecto');
+        $this->post('/procesar/proyecto',      'ProcesamientoController', 'proyecto');
+        $this->post('/procesar/nueva-accion', 'ProcesamientoController', 'nuevaAccion');
 
         // Próximas acciones
         $this->get('/acciones',                  'AccionesController', 'index');
@@ -93,6 +94,7 @@ class Router
         $this->delete('/acciones/{id}',          'AccionesController', 'destroy');
 
         // Proyectos
+        $this->get('/proyectos/stats',              'ProyectosController', 'stats');
         $this->get('/proyectos',                    'ProyectosController', 'index');
         $this->post('/proyectos/completar',         'ProyectosController', 'completar');
         $this->post('/proyectos/pausar',            'ProyectosController', 'pausar');
