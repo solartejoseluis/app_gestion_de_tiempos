@@ -42,6 +42,11 @@
                           class="nav-badge <?= $item['badge_class'] ?><?= $item['count'] === 0 ? ' d-none' : '' ?>">
                         <?= $item['count'] ?>
                     </span>
+                <?php elseif ($item['href'] === '/espera' && $item['badge_class'] !== null): ?>
+                    <span id="sidebar-espera-badge"
+                          class="nav-badge <?= $item['badge_class'] ?><?= $item['count'] === 0 ? ' d-none' : '' ?>">
+                        <?= $item['count'] ?>
+                    </span>
                 <?php elseif ($item['badge_class'] !== null && $item['count'] > 0): ?>
                     <span class="nav-badge <?= $item['badge_class'] ?>"><?= $item['count'] ?></span>
                 <?php endif; ?>

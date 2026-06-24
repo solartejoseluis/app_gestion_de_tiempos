@@ -106,10 +106,9 @@ class Router
         $this->patch('/proyectos/{id}/pausar',      'ProyectosController', 'pausar');
 
         // En espera de
-        $this->get('/espera',                   'EsperaController', 'index');
-        $this->patch('/espera/{id}/completar',  'EsperaController', 'completar');
-        $this->patch('/espera/{id}/posponer',   'EsperaController', 'posponer');
-        $this->patch('/espera/{id}/reasignar',  'EsperaController', 'reasignar');
+        $this->get('/espera',                'EsperaController', 'index');
+        $this->post('/espera/recibido',      'EsperaController', 'recibido');
+        $this->post('/espera/posponer',      'EsperaController', 'posponer');
 
         // Algún día
         $this->get('/someday',                  'SomedayController', 'index');

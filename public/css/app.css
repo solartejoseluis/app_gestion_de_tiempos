@@ -572,3 +572,52 @@ hr.proc-separator {
 .proc-btn-icon {
     font-size: 1.1rem;
 }
+
+/* ── Módulo En espera de ──────────────────────────── */
+.espera-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.espera-top {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #ffffff;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.espera-header {
+    padding: 18px 24px 10px;
+}
+
+.espera-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.espera-filtros {
+    padding: 8px 24px 12px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.espera-lista {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 24px;
+}
+
+.espera-item {
+    border-left: 2px solid transparent;
+}
+
+.espera-item.item-vencida {
+    border-left-color: #E24B4A;
+}
+
+.tag-persona {
+    background: #FAECE7;
+    color: #712B13;
+}
