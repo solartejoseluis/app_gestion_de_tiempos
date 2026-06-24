@@ -42,7 +42,10 @@ $total  = count($items);
                 <select id="filtro-proyecto" class="form-select form-select-sm" style="max-width:180px">
                     <option value="">Todos los proyectos</option>
                     <?php foreach ($proyectos as $proy): ?>
-                        <option value="<?= $proy['id'] ?>"><?= htmlspecialchars($proy['nombre']) ?></option>
+                        <option value="<?= $proy['id'] ?>"
+                            <?= $proy['id'] == $filtroProyectoId ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($proy['nombre']) ?>
+                        </option>
                     <?php endforeach; ?>
                 </select>
 

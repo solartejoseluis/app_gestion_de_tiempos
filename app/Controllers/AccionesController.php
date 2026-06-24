@@ -33,13 +33,16 @@ class AccionesController extends Controller
         $stmt->execute([$uid]);
         $proyectos = $stmt->fetchAll();
 
+        $filtroProyectoId = (int) ($_GET['proyecto_id'] ?? 0);
+
         $this->layout('acciones.index', [
-            'pageTitle'    => 'Próximas acciones',
-            'currentRoute' => '/acciones',
-            'items'        => $items,
-            'contextos'    => $contextos,
-            'areas'        => $areas,
-            'proyectos'    => $proyectos,
+            'pageTitle'         => 'Próximas acciones',
+            'currentRoute'      => '/acciones',
+            'items'             => $items,
+            'contextos'         => $contextos,
+            'areas'             => $areas,
+            'proyectos'         => $proyectos,
+            'filtroProyectoId'  => $filtroProyectoId,
         ]);
     }
 

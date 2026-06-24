@@ -289,8 +289,9 @@ class ProcesamientoController extends Controller
         $proyectoId = (int) $db->lastInsertId();
 
         $this->actualizarItem($id, [
-            'tipo'        => 'proyecto_accion',
-            'proyecto_id' => $proyectoId,
+            'tipo'             => 'completada',
+            'fecha_completada' => date('Y-m-d H:i:s'),
+            'proyecto_id'      => $proyectoId,
         ]);
         $this->json(null);
     }

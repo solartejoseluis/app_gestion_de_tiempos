@@ -55,10 +55,17 @@
         aplicarFiltros();
     });
 
-    document.getElementById('filtro-proyecto')?.addEventListener('change', (e) => {
+    const selProyecto = document.getElementById('filtro-proyecto');
+    selProyecto?.addEventListener('change', (e) => {
         projActivo = e.target.value;
         aplicarFiltros();
     });
+
+    // Aplicar filtro de proyecto preseleccionado desde la URL
+    if (selProyecto?.value) {
+        projActivo = selProyecto.value;
+        aplicarFiltros();
+    }
 
     // ── Limpiar filtros ───────────────────────────────────────
     document.getElementById('btn-limpiar-filtros')?.addEventListener('click', () => {
