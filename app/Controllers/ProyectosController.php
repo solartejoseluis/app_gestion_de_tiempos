@@ -6,13 +6,18 @@ class ProyectosController extends Controller
     public function index(): void
     {
         $this->requireAuth();
-        $uid       = (int) $_SESSION['usuario_id'];
-        $model     = new ProyectoModel();
-        $proyectos = $model->getProyectosConStats($uid);
+        $uid   = (int) $_SESSION['usuario_id'];
+        $db    = Database::connection();
+        $model = new ProyectoModel();
+        $todos = $model->getProyectosConStats($uid);
 
-        // Agrupar por area_id en PHP
+        // Separar completados de activos/pausados
+        $proyectosCompletados = array_values(array_filter($todos, fn($p) => $p['estado'] === 'completado'));
+        $activos              = array_filter($todos, fn($p) => $p['estado'] !== 'completado');
+
+        // Agrupar activos/pausados por área
         $grouped = [];
-        foreach ($proyectos as $p) {
+        foreach ($activos as $p) {
             $key = $p['area_id'] ?? 0;
             if (!isset($grouped[$key])) {
                 $grouped[$key] = [
@@ -24,13 +29,21 @@ class ProyectosController extends Controller
             $grouped[$key]['proyectos'][] = $p;
         }
 
-        $totalActivos = count(array_filter($proyectos, fn($p) => $p['estado'] === 'activo'));
+        $totalActivos = count(array_filter($activos, fn($p) => $p['estado'] === 'activo'));
+
+        $stmt = $db->prepare(
+            'SELECT id, nombre FROM areas WHERE usuario_id = ? AND deleted_at IS NULL ORDER BY nombre'
+        );
+        $stmt->execute([$uid]);
+        $areas = $stmt->fetchAll();
 
         $this->layout('proyectos.index', [
-            'pageTitle'    => 'Proyectos',
-            'currentRoute' => '/proyectos',
-            'grouped'      => $grouped,
-            'totalActivos' => $totalActivos,
+            'pageTitle'            => 'Proyectos',
+            'currentRoute'         => '/proyectos',
+            'grouped'              => $grouped,
+            'totalActivos'         => $totalActivos,
+            'proyectosCompletados' => $proyectosCompletados,
+            'areas'                => $areas,
         ]);
     }
 
@@ -43,10 +56,7 @@ class ProyectosController extends Controller
             $this->error('ID inválido.');
         }
         $model = new ProyectoModel();
-        if (!$model->actualizarEstado($id, $uid, [
-            'estado'     => 'completado',
-            'deleted_at' => date('Y-m-d H:i:s'),
-        ])) {
+        if (!$model->actualizarEstado($id, $uid, ['estado' => 'completado'])) {
             $this->error('No autorizado.', 403);
         }
         $this->json(null);
@@ -80,6 +90,38 @@ class ProyectosController extends Controller
             $this->error('No autorizado.', 403);
         }
         $this->json(null);
+    }
+
+    public function crear(): void
+    {
+        $this->requireAuth();
+        $uid = (int) $_SESSION['usuario_id'];
+
+        $nombre = trim($this->input('nombre', ''));
+        if ($nombre === '') {
+            $this->error('El nombre del proyecto es obligatorio.');
+        }
+
+        $areaId           = (int) $this->input('area_id', 0) ?: null;
+        $resultadoDeseado = trim($this->input('resultado_deseado', '')) ?: null;
+
+        $db = Database::connection();
+        $db->prepare(
+            'INSERT INTO proyectos (usuario_id, nombre, area_id, resultado_deseado, estado)
+             VALUES (?, ?, ?, ?, ?)'
+        )->execute([$uid, $nombre, $areaId, $resultadoDeseado, 'activo']);
+
+        $id = (int) $db->lastInsertId();
+
+        $areaNombre = '';
+        if ($areaId) {
+            $stmt = $db->prepare('SELECT nombre FROM areas WHERE id = ? AND usuario_id = ? LIMIT 1');
+            $stmt->execute([$areaId, $uid]);
+            $area = $stmt->fetch();
+            $areaNombre = $area ? $area['nombre'] : '';
+        }
+
+        $this->json(['id' => $id, 'nombre' => $nombre, 'area_nombre' => $areaNombre]);
     }
 
     public function stats(): void

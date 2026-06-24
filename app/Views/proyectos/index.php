@@ -1,11 +1,15 @@
 <div class="proyectos-wrapper">
 
     <!-- Encabezado sticky -->
-    <div class="proyectos-header">
+    <div class="proyectos-header d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-2">
             <h6 class="proyectos-title mb-0">Proyectos</h6>
             <span id="proyectos-counter" class="nav-badge badge-blue"><?= $totalActivos ?></span>
         </div>
+        <button id="btn-nuevo-proyecto" class="btn btn-sm btn-outline-primary"
+                data-bs-toggle="modal" data-bs-target="#modalNuevoProyecto">
+            <i class="bi bi-plus me-1"></i>Nuevo proyecto
+        </button>
     </div>
 
     <!-- Lista agrupada -->
@@ -14,7 +18,7 @@
         <?php if (empty($grouped)): ?>
             <div class="empty-state mt-4">
                 <i class="bi bi-folder"></i>
-                <p>No hay proyectos activos.<br>Crea uno procesando un ítem del inbox.</p>
+                <p>No hay proyectos activos.<br>Crea uno con el botón "Nuevo proyecto".</p>
             </div>
         <?php else: ?>
 
@@ -129,8 +133,96 @@
 
         <?php endif; ?>
 
+        <!-- Proyectos completados (siempre al final, colapsado) -->
+        <?php if (!empty($proyectosCompletados)): ?>
+            <div class="mt-4">
+                <div class="proyecto-area-header collapsed"
+                     data-bs-toggle="collapse"
+                     data-bs-target="#completados-collapse"
+                     role="button">
+                    <span>
+                        <i class="bi bi-check-circle me-1"></i>
+                        Proyectos completados
+                        <span class="ms-2 fw-normal opacity-75">(<?= count($proyectosCompletados) ?>)</span>
+                    </span>
+                    <i class="bi bi-chevron-down proyecto-area-chevron"></i>
+                </div>
+                <div id="completados-collapse" class="collapse">
+                    <?php foreach ($proyectosCompletados as $p): ?>
+                        <div class="proyecto-card proyecto-card-completada">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <span class="proyecto-nombre">
+                                    <?= htmlspecialchars($p['nombre']) ?>
+                                </span>
+                                <span class="small text-success fw-medium">
+                                    <i class="bi bi-check-circle me-1"></i>Completado
+                                </span>
+                            </div>
+                            <?php if ($p['resultado_deseado']): ?>
+                                <p class="proyecto-resultado mb-1">
+                                    <?= htmlspecialchars($p['resultado_deseado']) ?>
+                                </p>
+                            <?php endif; ?>
+                            <?php if ($p['fecha_completada']): ?>
+                                <p class="proyecto-stats mb-0">
+                                    <?= (new DateTime($p['fecha_completada']))->format('d/m/Y') ?>
+                                </p>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php endif; ?>
+
     </div><!-- /.proyectos-lista -->
 
 </div><!-- /.proyectos-wrapper -->
+
+<!-- Modal: Nuevo proyecto -->
+<div class="modal fade" id="modalNuevoProyecto"
+     data-bs-backdrop="static" data-bs-keyboard="false"
+     tabindex="-1" aria-labelledby="modalNuevoProyectoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-1">
+                <h6 class="modal-title fw-semibold" id="modalNuevoProyectoLabel">Nuevo proyecto</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="np-nombre" class="form-label small fw-medium mb-1">
+                        Nombre <span class="text-danger">*</span>
+                    </label>
+                    <input id="np-nombre" type="text" class="form-control form-control-sm"
+                           maxlength="200" placeholder="¿En qué proyecto estás trabajando?">
+                </div>
+                <div class="mb-3">
+                    <label for="np-area" class="form-label small fw-medium mb-1">Área</label>
+                    <select id="np-area" class="form-select form-select-sm">
+                        <option value="">Sin área</option>
+                        <?php foreach ($areas as $a): ?>
+                            <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nombre']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label for="np-resultado" class="form-label small fw-medium mb-1">
+                        Resultado deseado <span class="text-muted fw-normal">(opcional)</span>
+                    </label>
+                    <textarea id="np-resultado" class="form-control form-control-sm" rows="2"
+                              placeholder="¿Cómo se verá cuando esté completo?"></textarea>
+                </div>
+                <div id="np-error" class="alert alert-danger d-none py-2 small mt-2" role="alert"></div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btn-crear-proyecto" class="btn btn-sm btn-primary">
+                    <i class="bi bi-folder-plus me-1"></i>Crear proyecto
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="/js/proyectos.js"></script>

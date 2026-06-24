@@ -12,7 +12,9 @@
     }
 
     function actualizarCounter() {
-        const activos = document.querySelectorAll('.proyecto-card:not(.proyecto-pausado)').length;
+        const activos = document.querySelectorAll(
+            '.proyecto-card:not(.proyecto-pausado):not(.proyecto-card-completada)'
+        ).length;
         if (counter) counter.textContent = activos;
     }
 
@@ -97,6 +99,60 @@
         } else if (btnReactivar) {
             const id = btnReactivar.dataset.itemId;
             if (id) reactivarProyecto(id, btnReactivar);
+        }
+    });
+
+    // ── Modal: Nuevo proyecto ─────────────────────────────────
+    const modalNP = document.getElementById('modalNuevoProyecto');
+
+    if (modalNP) {
+        modalNP.addEventListener('hidden.bs.modal', () => {
+            document.getElementById('np-nombre').value = '';
+            document.getElementById('np-area').selectedIndex = 0;
+            document.getElementById('np-resultado').value = '';
+            document.getElementById('np-error').classList.add('d-none');
+        });
+    }
+
+    document.getElementById('btn-crear-proyecto')?.addEventListener('click', async function () {
+        const nombre    = document.getElementById('np-nombre').value.trim();
+        const area_id   = document.getElementById('np-area').value;
+        const resultado = document.getElementById('np-resultado').value.trim();
+        const errorEl   = document.getElementById('np-error');
+
+        if (!nombre) {
+            errorEl.textContent = 'El nombre es obligatorio.';
+            errorEl.classList.remove('d-none');
+            return;
+        }
+
+        errorEl.classList.add('d-none');
+        this.disabled    = true;
+        const orig       = this.innerHTML;
+        this.textContent = 'Creando...';
+
+        try {
+            const res  = await fetch('/proyectos/crear', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body:    new URLSearchParams({ nombre, area_id, resultado_deseado: resultado }),
+            });
+            const data = await res.json();
+
+            if (data.ok) {
+                bootstrap.Modal.getInstance(modalNP).hide();
+                window.location.reload();
+            } else {
+                errorEl.textContent = data.error ?? 'Error al crear el proyecto.';
+                errorEl.classList.remove('d-none');
+                this.disabled  = false;
+                this.innerHTML = orig;
+            }
+        } catch {
+            errorEl.textContent = 'Error de conexión. Inténtalo de nuevo.';
+            errorEl.classList.remove('d-none');
+            this.disabled  = false;
+            this.innerHTML = orig;
         }
     });
 

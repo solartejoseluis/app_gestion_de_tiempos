@@ -11,6 +11,7 @@ class ProyectoModel extends Model
             SELECT
                 p.id, p.nombre, p.descripcion, p.resultado_deseado,
                 p.estado, p.area_id, p.fecha_limite, p.created_at,
+                p.updated_at AS fecha_completada,
                 a.nombre AS area_nombre,
                 a.color  AS area_color,
                 SUM(CASE WHEN i.id IS NOT NULL AND i.deleted_at IS NULL
@@ -26,8 +27,8 @@ class ProyectoModel extends Model
             LEFT JOIN areas a ON a.id = p.area_id AND a.deleted_at IS NULL
             LEFT JOIN items i ON i.proyecto_id = p.id
             WHERE p.usuario_id = ?
-              AND p.estado IN ('activo','pausa')
               AND p.deleted_at IS NULL
+              AND p.estado IN ('activo','pausa','completado')
             GROUP BY
                 p.id, p.nombre, p.descripcion, p.resultado_deseado,
                 p.estado, p.area_id, p.fecha_limite, p.created_at,
