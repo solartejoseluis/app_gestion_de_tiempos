@@ -94,6 +94,9 @@ class Router
 
         // Proyectos
         $this->get('/proyectos',                    'ProyectosController', 'index');
+        $this->post('/proyectos/completar',         'ProyectosController', 'completar');
+        $this->post('/proyectos/pausar',            'ProyectosController', 'pausar');
+        $this->post('/proyectos/reactivar',         'ProyectosController', 'reactivar');
         $this->post('/proyectos',                   'ProyectosController', 'store');
         $this->patch('/proyectos/{id}',             'ProyectosController', 'update');
         $this->patch('/proyectos/{id}/completar',   'ProyectosController', 'completar');

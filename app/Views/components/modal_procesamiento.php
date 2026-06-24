@@ -144,7 +144,7 @@
 
                     <!-- Subformulario proyecto -->
                     <div id="proc-proyecto-form" class="d-none">
-                        <div class="mb-2">
+                        <div class="mb-3">
                             <label for="proc-resultado-deseado" class="form-label small mb-1">
                                 Resultado deseado <span class="text-danger">*</span>
                             </label>
@@ -152,28 +152,9 @@
                                       class="form-control form-control-sm" rows="2"
                                       placeholder="¿Cómo se verá cuando esté completo?"></textarea>
                         </div>
-                        <div class="mb-2">
-                            <label for="proc-proyecto-existente" class="form-label small mb-1">Proyecto</label>
-                            <select id="proc-proyecto-existente" class="form-select form-select-sm">
-                                <option value="nuevo">Crear nuevo proyecto</option>
-                            </select>
-                        </div>
-                        <div class="mb-2">
-                            <input id="proc-nombre-proyecto" type="text"
-                                   class="form-control form-control-sm d-none"
-                                   placeholder="Nombre del nuevo proyecto" maxlength="200">
-                        </div>
-                        <div class="mb-3">
-                            <label for="proc-proyecto-contexto" class="form-label small mb-1">
-                                Contexto <span class="text-danger">*</span>
-                            </label>
-                            <select id="proc-proyecto-contexto" class="form-select form-select-sm">
-                                <option value="">Selecciona un contexto</option>
-                            </select>
-                        </div>
                         <button type="button" id="btn-guardar-proyecto"
                                 class="btn btn-sm btn-proc-bifurcacion w-100">
-                            <i class="bi bi-folder-plus me-1"></i>Guardar proyecto y crear acción
+                            <i class="bi bi-folder-plus me-1"></i>Crear proyecto
                         </button>
                     </div>
                 </div>

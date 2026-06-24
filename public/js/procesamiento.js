@@ -65,16 +65,6 @@
          'proc-del-proyecto', 'proc-prog-proyecto'].forEach(id => {
             poblarSelect(id, data.data, 'Ninguno');
         });
-
-        // proc-proyecto-existente: primera opción fija es "Crear nuevo"
-        const selExistente = el('proc-proyecto-existente');
-        selExistente.innerHTML = '<option value="nuevo">Crear nuevo proyecto</option>';
-        data.data.forEach(({ id: val, nombre }) => {
-            const opt = document.createElement('option');
-            opt.value = val;
-            opt.textContent = nombre;
-            selExistente.appendChild(opt);
-        });
     }
 
     // ── Reset ─────────────────────────────────────────────────
@@ -89,7 +79,7 @@
         hide(
             'proc-a1-form', 'proc-a2-form', 'proc-a3-form',
             'proc-proyecto-form',
-            'proc-a2-fecha', 'proc-nombre-proyecto',
+            'proc-a2-fecha',
             'proc-del-fecha', 'proc-prog-fecha',
             'btn-completar-ahora'
         );
@@ -100,14 +90,13 @@
 
         // Resetear selects a primera opción
         ['proc-area', 'proc-quien',
-         'proc-a2-fecha-tipo', 'proc-del-seguimiento', 'proc-prog-tiempo',
-         'proc-proyecto-existente'].forEach(id => {
+         'proc-a2-fecha-tipo', 'proc-del-seguimiento', 'proc-prog-tiempo'].forEach(id => {
             const s = el(id);
             if (s) s.selectedIndex = 0;
         });
 
         // Limpiar inputs y textarea
-        ['proc-titulo-input', 'proc-a3-etiquetas', 'proc-nombre-proyecto',
+        ['proc-titulo-input', 'proc-a3-etiquetas',
          'proc-a2-fecha', 'proc-del-fecha', 'proc-prog-fecha'].forEach(id => {
             const e = el(id);
             if (e) e.value = '';
@@ -163,7 +152,7 @@
         }
 
         if (contextosData.ok) {
-            ['proc-del-contexto', 'proc-prog-contexto', 'proc-proyecto-contexto']
+            ['proc-del-contexto', 'proc-prog-contexto']
                 .forEach(id => poblarSelect(id, contextosData.data, 'Selecciona un contexto'));
         }
     });
@@ -267,17 +256,6 @@
         hideSection('proc-b3', 'proc-b4', 'proc-delegar', 'proc-programar');
         hide('btn-completar-ahora');
         show('proc-proyecto-form');
-    });
-
-    // ── Proyecto existente vs nuevo ───────────────────────────
-    el('proc-proyecto-existente').addEventListener('change', (e) => {
-        if (e.target.value === 'nuevo') {
-            show('proc-nombre-proyecto');
-            el('proc-nombre-proyecto').focus();
-        } else {
-            hide('proc-nombre-proyecto');
-            el('proc-nombre-proyecto').value = '';
-        }
     });
 
     // ── B3 — ¿Menos de 2 minutos? ────────────────────────────
@@ -419,17 +397,11 @@
     // ── Submit: Proyecto ──────────────────────────────────────
     el('btn-guardar-proyecto').addEventListener('click', function () {
         const resultado = el('proc-resultado-deseado').value.trim();
-        const contexto  = el('proc-proyecto-contexto').value;
         if (!resultado) { mostrarError('El resultado deseado es obligatorio.'); return; }
-        if (!contexto)  { mostrarError('El contexto es obligatorio.');          return; }
 
-        const proyExistente = el('proc-proyecto-existente').value;
         postAccion('/procesar/proyecto', {
             id:                itemId,
             resultado_deseado: resultado,
-            proyecto_id:       proyExistente !== 'nuevo' ? proyExistente : '',
-            nombre_proyecto:   proyExistente === 'nuevo' ? el('proc-nombre-proyecto').value.trim() : '',
-            contexto_id:       contexto,
             area_id:           el('proc-area').value || '',
         }, this);
     });

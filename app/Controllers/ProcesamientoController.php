@@ -262,41 +262,35 @@ class ProcesamientoController extends Controller
         $id = $this->itemId();
         $this->assertItem($id);
 
-        $contextoId = (int) $this->input('contexto_id', 0);
-        if ($contextoId <= 0) {
-            $this->error('El contexto es obligatorio.');
+        $resultadoDeseado = trim($this->input('resultado_deseado', ''));
+        if ($resultadoDeseado === '') {
+            $this->error('El resultado deseado es obligatorio.');
         }
 
-        $proyectoId     = (int) $this->input('proyecto_id', 0);
-        $nombreProyecto = trim($this->input('nombre_proyecto', ''));
+        $db = Database::connection();
 
-        if ($proyectoId <= 0 && $nombreProyecto === '') {
-            $this->error('Debe indicar un proyecto existente o el nombre de uno nuevo.');
-        }
+        $stmt = $db->prepare('SELECT titulo FROM items WHERE id = ? AND usuario_id = ? LIMIT 1');
+        $stmt->execute([$id, $this->uid()]);
+        $item = $stmt->fetch();
 
-        if ($proyectoId <= 0) {
-            $areaId           = $this->intONull('area_id');
-            $resultadoDeseado = trim($this->input('resultado_deseado', ''));
+        $areaId = $this->intONull('area_id');
 
-            $datos = [
-                'usuario_id'       => $this->uid(),
-                'nombre'           => $nombreProyecto,
-                'resultado_deseado' => $resultadoDeseado !== '' ? $resultadoDeseado : null,
-                'area_id'          => $areaId,
-            ];
+        $datos = [
+            'usuario_id'       => $this->uid(),
+            'nombre'           => $item['titulo'],
+            'resultado_deseado' => $resultadoDeseado,
+            'area_id'          => $areaId,
+        ];
 
-            $cols   = implode(', ', array_keys($datos));
-            $places = implode(', ', array_fill(0, count($datos), '?'));
-            $db     = Database::connection();
-            $db->prepare("INSERT INTO proyectos ({$cols}) VALUES ({$places})")
-               ->execute(array_values($datos));
-            $proyectoId = (int) $db->lastInsertId();
-        }
+        $cols   = implode(', ', array_keys($datos));
+        $places = implode(', ', array_fill(0, count($datos), '?'));
+        $db->prepare("INSERT INTO proyectos ({$cols}) VALUES ({$places})")
+           ->execute(array_values($datos));
+        $proyectoId = (int) $db->lastInsertId();
 
         $this->actualizarItem($id, [
             'tipo'        => 'proyecto_accion',
             'proyecto_id' => $proyectoId,
-            'contexto_id' => $contextoId,
         ]);
         $this->json(null);
     }
