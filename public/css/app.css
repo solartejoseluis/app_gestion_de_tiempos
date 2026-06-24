@@ -621,3 +621,109 @@ hr.proc-separator {
     background: #FAECE7;
     color: #712B13;
 }
+
+/* ── Someday ───────────────────────────────────────────── */
+.someday-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.someday-top {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #ffffff;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.someday-header {
+    padding: 18px 24px 10px;
+}
+
+.someday-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.someday-filtros {
+    padding: 8px 24px 12px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.someday-lista {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 24px;
+}
+
+.someday-item {
+    border-left: 2px solid transparent;
+}
+
+.someday-item.item-revisar {
+    border-left-color: #EF9F27;
+}
+
+.tag-revisar {
+    background: #FEF3E2;
+    color: #92550A;
+}
+
+/* ── Referencia ────────────────────────────────────────── */
+.referencia-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.referencia-top {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #ffffff;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.referencia-header {
+    padding: 18px 24px 10px;
+}
+
+.referencia-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.referencia-filtros {
+    padding: 8px 24px 12px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.referencia-lista {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 24px;
+}
+
+.tag-etiqueta {
+    background: #E6F1FB;
+    color: #0C447C;
+}
+
+/* ── Botón proceso (púrpura) ───────────────────────────── */
+.btn-process {
+    border: 1px solid #AFA9EC;
+    color: #534AB7;
+    background: transparent;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.btn-process:hover {
+    background: #f0eeff;
+    color: #534AB7;
+    border-color: #9088d4;
+}

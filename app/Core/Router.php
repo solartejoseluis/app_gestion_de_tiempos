@@ -111,13 +111,16 @@ class Router
         $this->post('/espera/posponer',      'EsperaController', 'posponer');
 
         // Algún día
-        $this->get('/someday',                  'SomedayController', 'index');
-        $this->patch('/someday/{id}/activar',   'SomedayController', 'activar');
-        $this->patch('/someday/{id}/posponer',  'SomedayController', 'posponer');
+        $this->get('/someday',              'SomedayController', 'index');
+        $this->post('/someday/activar',     'SomedayController', 'activar');
+        $this->post('/someday/posponer',    'SomedayController', 'posponer');
+        $this->post('/someday/eliminar',    'SomedayController', 'eliminar');
 
         // Referencia
-        $this->get('/referencia',          'ReferenciaController', 'index');
-        $this->patch('/referencia/{id}',   'ReferenciaController', 'update');
+        $this->get('/referencia',                   'ReferenciaController', 'index');
+        $this->post('/referencia/eliminar',         'ReferenciaController', 'eliminar');
+        $this->post('/referencia/editar-etiquetas', 'ReferenciaController', 'editarEtiquetas');
+        $this->post('/referencia/activar',          'ReferenciaController', 'activar');
 
         // Completadas
         $this->get('/completadas',         'InboxController',      'completadas');
