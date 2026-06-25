@@ -118,19 +118,61 @@ Cada Model define `protected string $table`. Métodos heredados:
 ## Contexto GTD
 
 - Los ítems tienen 8 tipos: `inbox`, `accion`, `proyecto_accion`, `delegada`, `incubada`, `referencia`, `completada`, `eliminada`.
-- El campo `contexto` (`@`) es obligatorio para tipos: `accion`, `proyecto_accion`, `delegada`.
+- El campo `contexto` (`@`) es obligatorio para tipos: `accion`, `proyecto_accion`, `delegada`. **No aplica a proyectos.**
 - El calendario solo recibe ítems con `tipo_tiempo = 'cita'` (día y hora fijos).
 - El árbol de decisión GTD tiene 5 bifurcaciones (ver Especificación Técnica Funcional / Anexo A).
+- **Flujo GTD corregido:** cuando un ítem del inbox se convierte en proyecto, el ítem original queda con `tipo = 'completada'` (no `proyecto_accion`). Solo las acciones hijas del proyecto son `proyecto_accion`.
 
-## Módulos registrados en el router
+## Estado de módulos
 
-| Ruta base      | Controller              | Función GTD              |
-|----------------|-------------------------|--------------------------|
-| `/inbox`       | `InboxController`       | Captura y procesado      |
-| `/acciones`    | `AccionesController`    | Próximas acciones        |
-| `/proyectos`   | `ProyectosController`   | Proyectos activos        |
-| `/espera`      | `EsperaController`      | En espera de (delegadas) |
-| `/someday`     | `SomedayController`     | Algún día / tal vez      |
-| `/referencia`  | `ReferenciaController`  | Material de referencia   |
-| `/revision`    | `RevisionController`    | Revisión semanal         |
-| `/config`      | `ConfigController`      | Áreas, contextos, personas |
+### Completados (0–9)
+
+| #  | Ruta base      | Controller                  | Estado     |
+|----|----------------|-----------------------------|------------|
+| 0  | —              | —                           | Estructura MVC, Docker, Router, Core |
+| 1  | `/auth`        | `AuthController`            | Login / logout con sesión |
+| 2  | `/dashboard`   | —                           | Layout base con sidebar y badges |
+| 3  | `/inbox`       | `InboxController`           | Captura y listado con soft-delete |
+| 4  | `/inbox` (modal) | `ProcesamientoController` | Modal GTD completo (11 endpoints, cascada) |
+| 5  | `/acciones`    | `AccionesController`        | Próximas acciones, filtros, chips de contexto, completar |
+| 6  | `/proyectos`   | `ProyectosController`       | Proyectos activos/completados, colapso por área, stats en tiempo real |
+| 7  | `/espera`      | `EsperaController`          | En espera de, filtros, vencidos |
+| 8  | `/someday`     | `SomedayController`         | Algún día / tal vez |
+| 9  | `/referencia`  | `ReferenciaController`      | Material de referencia |
+
+### Pendientes (10–12)
+
+| #  | Ruta base   | Controller           | Función GTD              |
+|----|-------------|----------------------|--------------------------|
+| 10 | `/revision` | `RevisionController` | Revisión semanal         |
+| 11 | `/config`   | `ConfigController`   | Áreas, contextos, personas |
+| 12 | —           | —                    | Calendario (citas)       |
+
+## Decisiones técnicas establecidas
+
+### Flujo de procesamiento GTD
+- Ítem que se convierte en **proyecto**: el ítem original queda `tipo = 'completada'`; se crea un registro nuevo en la tabla `proyectos`.
+- El modal de procesamiento tiene **modo `agregar-accion`** cuando se abre desde la vista de proyectos (añade una `proyecto_accion` al proyecto padre, sin re-procesar el ítem).
+- El campo `contexto` **no aplica** a proyectos (solo a `accion`, `proyecto_accion`, `delegada`).
+
+### Schema — columnas añadidas
+- `items`: `etiquetas` (JSON/TEXT)
+- `items`: `fecha_revision` (DATE)
+- `items`: `resultado_deseado` (TEXT)
+- `areas`: `color` (VARCHAR)
+- `contextos`: `color` (VARCHAR)
+- `personas`: `rol` (VARCHAR)
+
+### Frontend / Bootstrap
+- `Bootstrap.Modal` **no se instancia al inicio del IIFE**. Usar siempre `bootstrap.Modal.getOrCreateInstance(el)` en el momento de uso para evitar dobles listeners.
+- Delegación de eventos **sobre el contenedor/lista padre** (no `querySelector` directo sobre ítems renderizados por PHP), para que funcione tras re-render dinámico.
+
+## Patrones establecidos
+
+| Patrón | Dónde aplica |
+|--------|--------------|
+| `$this->layout('modulo.vista', $data)` | Toda vista que use el dashboard con sidebar |
+| `SidebarCounters::get($userId)` | Llamada única dentro de `layout()` para los badges del sidebar |
+| Alias explícitos en todos los `JOIN` | Modelos con consultas multi-tabla (evitar columnas ambiguas) |
+| `POST` para acciones AJAX | Toda llamada fetch/XHR que muta estado |
+| `GET` para vistas | Todas las rutas que devuelven HTML |
