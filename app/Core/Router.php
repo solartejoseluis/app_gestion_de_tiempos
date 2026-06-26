@@ -133,12 +133,23 @@ class Router
         $this->get('/revision/historial',   'RevisionController', 'historial');
 
         // Configuración
-        $this->get('/config',              'ConfigController', 'index');
-        $this->post('/config/areas',       'ConfigController', 'storeArea');
-        $this->patch('/config/areas/{id}', 'ConfigController', 'updateArea');
-        $this->post('/config/contextos',       'ConfigController', 'storeContexto');
-        $this->patch('/config/contextos/{id}', 'ConfigController', 'updateContexto');
-        $this->post('/config/personas',        'ConfigController', 'storePersona');
-        $this->patch('/config/personas/{id}',  'ConfigController', 'updatePersona');
+        $this->get('/config/exportar',                 'ConfigController', 'exportar');
+        $this->get('/config',                          'ConfigController', 'index');
+        $this->post('/config/areas',                   'ConfigController', 'crearArea');
+        $this->patch('/config/areas/{id}',             'ConfigController', 'editarArea');
+        $this->post('/config/areas/{id}/archivar',     'ConfigController', 'archivarArea');
+        $this->post('/config/areas/{id}/restaurar',    'ConfigController', 'restaurarArea');
+        $this->delete('/config/areas/{id}',            'ConfigController', 'eliminarArea');
+        $this->post('/config/contextos/sugeridos',         'ConfigController', 'cargarContextosSugeridos');
+        $this->post('/config/contextos',                   'ConfigController', 'crearContexto');
+        $this->patch('/config/contextos/{id}',             'ConfigController', 'editarContexto');
+        $this->post('/config/contextos/{id}/archivar',     'ConfigController', 'archivarContexto');
+        $this->post('/config/contextos/{id}/restaurar',    'ConfigController', 'restaurarContexto');
+        $this->delete('/config/contextos/{id}',            'ConfigController', 'eliminarContexto');
+        $this->post('/config/personas',                    'ConfigController', 'crearPersona');
+        $this->patch('/config/personas/{id}',              'ConfigController', 'editarPersona');
+        $this->post('/config/personas/{id}/archivar',      'ConfigController', 'archivarPersona');
+        $this->post('/config/personas/{id}/restaurar',     'ConfigController', 'restaurarPersona');
+        $this->delete('/config/personas/{id}',             'ConfigController', 'eliminarPersona');
     }
 }
