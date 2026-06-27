@@ -4,6 +4,8 @@ $hoy   = date('Y-m-d');
 $meses = ['Jan'=>'ene','Feb'=>'feb','Mar'=>'mar','Apr'=>'abr','May'=>'may',
           'Jun'=>'jun','Jul'=>'jul','Aug'=>'ago','Sep'=>'sep','Oct'=>'oct',
           'Nov'=>'nov','Dec'=>'dic'];
+$diasSem = ['Sun'=>'dom','Mon'=>'lun','Tue'=>'mar',
+            'Wed'=>'mié','Thu'=>'jue','Fri'=>'vie','Sat'=>'sáb'];
 $total = count($itemsEspera);
 ?>
 
@@ -40,9 +42,31 @@ $total = count($itemsEspera);
             <?php foreach ($itemsEspera as $item):
                 $vencida  = $item['fecha_accion'] !== null && $item['fecha_accion'] < $hoy;
                 $fechaStr = null;
+                $horaStr  = null;
+                $diasStr  = null;
+
                 if ($item['fecha_accion']) {
                     $dt       = new DateTime($item['fecha_accion']);
-                    $fechaStr = $dt->format('j') . ' ' . $meses[$dt->format('M')];
+                    $fechaStr = $diasSem[$dt->format('D')] . ' ' . $dt->format('j') . ' ' . $meses[$dt->format('M')];
+
+                    if (!empty($item['fecha_cita']) && $item['tipo_tiempo'] === 'cita') {
+                        $horaStr = (new DateTime($item['fecha_cita']))->format('H:i');
+                    }
+
+                    $hoyDt    = new DateTime($hoy);
+                    $diff     = (int) $hoyDt->diff($dt)->days;
+                    $esFuturo = $dt >= $hoyDt;
+                    if ($item['fecha_accion'] === $hoy) {
+                        $diasStr = 'hoy';
+                    } elseif ($esFuturo && $diff === 1) {
+                        $diasStr = 'mañana';
+                    } elseif ($esFuturo) {
+                        $diasStr = 'en ' . $diff . ' días';
+                    } elseif ($diff === 1) {
+                        $diasStr = 'ayer';
+                    } else {
+                        $diasStr = $diff . ' días pasada';
+                    }
                 }
             ?>
                 <div class="item espera-item <?= $vencida ? 'item-vencida' : '' ?>"
@@ -59,10 +83,17 @@ $total = count($itemsEspera);
                             <?php if ($fechaStr): ?>
                                 <span class="tag <?= $vencida ? 'tag-alert' : 'tag-date' ?>">
                                     <?= $fechaStr ?>
+                                    <?php if ($horaStr): ?>· <?= $horaStr ?><?php endif; ?>
                                 </span>
-                            <?php endif; ?>
-                            <?php if ($vencida): ?>
-                                <span class="tag tag-alert fw-bold">Vencido</span>
+                                <?php if ($diasStr): ?>
+                                    <span class="tag" style="font-size:.7rem;<?= $vencida
+                                        ? 'background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;'
+                                        : ($diasStr === 'hoy'
+                                            ? 'background:#fef9c3;color:#854d0e;border:1px solid #fde047;'
+                                            : 'background:#f0fdf4;color:#166534;border:1px solid #86efac;') ?>">
+                                        <?= htmlspecialchars($diasStr) ?>
+                                    </span>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                         <span class="text-success small fw-semibold d-none decision-indicator mt-1 d-block"></span>

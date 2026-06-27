@@ -85,7 +85,33 @@ $totalActivas = count($acciones);
             <div id="acciones-lista">
                 <?php foreach ($acciones as $item):
                     $vencida  = $item['fecha_accion'] !== null && $item['fecha_accion'] < $hoy;
-                    $fechaStr = $fmtFecha($item['fecha_accion']);
+                    $fechaStr = null;
+                    $horaStr  = null;
+                    $diasStr  = null;
+
+                    if ($item['fecha_accion']) {
+                        $dt       = new DateTime($item['fecha_accion']);
+                        $fechaStr = $dias[$dt->format('D')] . ' ' . $dt->format('j') . ' ' . $meses[$dt->format('M')];
+
+                        if (!empty($item['fecha_cita']) && $item['tipo_tiempo'] === 'cita') {
+                            $horaStr = (new DateTime($item['fecha_cita']))->format('H:i');
+                        }
+
+                        $hoyDt    = new DateTime($hoy);
+                        $diff     = (int) $hoyDt->diff($dt)->days;
+                        $esFuturo = $dt >= $hoyDt;
+                        if ($item['fecha_accion'] === $hoy) {
+                            $diasStr = 'hoy';
+                        } elseif ($esFuturo && $diff === 1) {
+                            $diasStr = 'mañana';
+                        } elseif ($esFuturo) {
+                            $diasStr = 'en ' . $diff . ' días';
+                        } elseif ($diff === 1) {
+                            $diasStr = 'ayer';
+                        } else {
+                            $diasStr = $diff . ' días pasada';
+                        }
+                    }
                 ?>
                     <div class="item acciones-item mb-2 <?= $vencida ? 'item-vencida' : '' ?>"
                          data-id="<?= $item['id'] ?>">
@@ -110,7 +136,17 @@ $totalActivas = count($acciones);
                                 <?php if ($fechaStr): ?>
                                     <span class="tag <?= $vencida ? 'tag-alert' : 'tag-date' ?>">
                                         <?= $fechaStr ?>
+                                        <?php if ($horaStr): ?>· <?= $horaStr ?><?php endif; ?>
                                     </span>
+                                    <?php if ($diasStr): ?>
+                                        <span class="tag" style="font-size:.7rem;<?= $vencida
+                                            ? 'background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;'
+                                            : ($diasStr === 'hoy'
+                                                ? 'background:#fef9c3;color:#854d0e;border:1px solid #fde047;'
+                                                : 'background:#f0fdf4;color:#166534;border:1px solid #86efac;') ?>">
+                                            <?= htmlspecialchars($diasStr) ?>
+                                        </span>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </div>
 
