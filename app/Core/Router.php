@@ -98,6 +98,7 @@ class Router
 
         // Proyectos
         $this->get('/proyectos/stats',              'ProyectosController', 'stats');
+        $this->get('/proyectos/{id}/acciones',      'ProyectosController', 'verAcciones');
         $this->get('/proyectos',                    'ProyectosController', 'index');
         $this->post('/proyectos/crear',              'ProyectosController', 'crear');
         $this->post('/proyectos/completar',         'ProyectosController', 'completar');

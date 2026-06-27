@@ -79,7 +79,7 @@ $hayProyectos = !empty($proyectos) || !empty($proyectosCompletados);
 
                     <!-- Acciones -->
                     <div class="d-flex flex-wrap gap-2 mt-1">
-                        <a href="/acciones?proyecto_id=<?= $p['id'] ?>"
+                        <a href="/proyectos/<?= $p['id'] ?>/acciones"
                            class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-list-check me-1"></i>Ver acciones
                         </a>

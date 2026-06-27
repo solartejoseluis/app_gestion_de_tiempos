@@ -124,6 +124,61 @@ class ProyectosController extends Controller
         $this->json(['id' => $id, 'nombre' => $nombre, 'area_nombre' => $areaNombre]);
     }
 
+    public function verAcciones(string $id): void
+    {
+        $this->requireAuth();
+        $id  = (int) $id;
+        $uid = (int) $_SESSION['usuario_id'];
+
+        $db   = Database::connection();
+        $stmt = $db->prepare(
+            'SELECT id, nombre, resultado_deseado, estado, area_id
+             FROM proyectos
+             WHERE id = ? AND usuario_id = ? AND deleted_at IS NULL LIMIT 1'
+        );
+        $stmt->execute([$id, $uid]);
+        $proyecto = $stmt->fetch();
+
+        if (!$proyecto) {
+            $this->redirect('/proyectos');
+        }
+
+        $stmt = $db->prepare(
+            "SELECT i.*, c.nombre AS contexto_nombre, c.color AS contexto_color
+             FROM items i
+             LEFT JOIN contextos c ON c.id = i.contexto_id AND c.deleted_at IS NULL
+             WHERE i.proyecto_id = ?
+               AND i.usuario_id = ?
+               AND i.tipo = 'proyecto_accion'
+               AND i.deleted_at IS NULL
+             ORDER BY ISNULL(i.fecha_accion) ASC, i.fecha_accion ASC, i.created_at DESC"
+        );
+        $stmt->execute([$id, $uid]);
+        $acciones = $stmt->fetchAll();
+
+        $stmt = $db->prepare(
+            "SELECT i.*, c.nombre AS contexto_nombre
+             FROM items i
+             LEFT JOIN contextos c ON c.id = i.contexto_id AND c.deleted_at IS NULL
+             WHERE i.proyecto_id = ?
+               AND i.usuario_id = ?
+               AND i.tipo = 'completada'
+               AND i.deleted_at IS NULL
+             ORDER BY i.fecha_completada DESC
+             LIMIT 50"
+        );
+        $stmt->execute([$id, $uid]);
+        $completadas = $stmt->fetchAll();
+
+        $this->layout('proyectos.acciones', [
+            'pageTitle'    => $proyecto['nombre'],
+            'currentRoute' => '/proyectos',
+            'proyecto'     => $proyecto,
+            'acciones'     => $acciones,
+            'completadas'  => $completadas,
+        ]);
+    }
+
     public function stats(): void
     {
         $this->requireAuth();
