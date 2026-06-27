@@ -134,4 +134,31 @@ class AccionesController extends Controller
 
         $this->json(null);
     }
+
+    public function destroy(string $id): void
+    {
+        $this->requireAuth();
+        $id  = (int) $id;
+        $uid = (int) $_SESSION['usuario_id'];
+
+        if ($id <= 0) {
+            $this->error('ID inválido.');
+        }
+
+        $db   = Database::connection();
+        $stmt = $db->prepare(
+            'SELECT id FROM items
+             WHERE id = ? AND usuario_id = ? AND deleted_at IS NULL LIMIT 1'
+        );
+        $stmt->execute([$id, $uid]);
+        if (!$stmt->fetch()) {
+            $this->error('No autorizado.', 403);
+        }
+
+        $db->prepare(
+            'UPDATE items SET deleted_at = NOW() WHERE id = ?'
+        )->execute([$id]);
+
+        $this->json(null);
+    }
 }

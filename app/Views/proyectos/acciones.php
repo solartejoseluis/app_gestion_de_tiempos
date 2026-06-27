@@ -31,6 +31,25 @@ $totalActivas = count($acciones);
                     <?= htmlspecialchars($proyecto['resultado_deseado']) ?>
                 </p>
             <?php endif; ?>
+            <div class="d-flex align-items-center gap-3 mb-2 text-muted small">
+                <?php if ($proyecto['area_nombre']): ?>
+                    <span class="badge fw-normal"
+                          style="background:<?= htmlspecialchars($proyecto['area_color']) ?>20;
+                                 color:<?= htmlspecialchars($proyecto['area_color']) ?>;
+                                 border:1px solid <?= htmlspecialchars($proyecto['area_color']) ?>40">
+                        <?= htmlspecialchars($proyecto['area_nombre']) ?>
+                    </span>
+                <?php endif; ?>
+                <span>
+                    <i class="bi bi-calendar3 me-1"></i>
+                    Creado el <?php
+                        $dtCreado = new DateTime($proyecto['created_at']);
+                        echo $dtCreado->format('j') . ' ' .
+                             $meses[$dtCreado->format('M')] . ' ' .
+                             $dtCreado->format('Y');
+                    ?>
+                </span>
+            </div>
             <?php if ($proyecto['estado'] === 'pausa'): ?>
                 <span class="badge bg-warning text-dark">En pausa</span>
             <?php else: ?>
@@ -101,6 +120,12 @@ $totalActivas = count($acciones);
                                     data-item-id="<?= $item['id'] ?>">
                                 <i class="bi bi-check me-1"></i>Hecho
                             </button>
+                            <button class="btn btn-sm btn-outline-danger btn-eliminar-accion"
+                                    data-id="<?= $item['id'] ?>"
+                                    data-titulo="<?= htmlspecialchars($item['titulo'], ENT_QUOTES) ?>"
+                                    title="Eliminar acción">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </div>
 
                     </div>
@@ -158,6 +183,12 @@ $totalActivas = count($acciones);
                                         title="Mover de vuelta a próximas acciones">
                                     <i class="bi bi-arrow-counterclockwise"></i>
                                 </button>
+                                <button class="btn btn-sm btn-outline-danger btn-eliminar-accion flex-shrink-0"
+                                        data-id="<?= $c['id'] ?>"
+                                        data-titulo="<?= htmlspecialchars($c['titulo'], ENT_QUOTES) ?>"
+                                        title="Eliminar acción">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -168,15 +199,105 @@ $totalActivas = count($acciones);
 
 </div>
 
+<div class="modal fade" id="modalConfirmarEliminarAccion" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-1">
+                <h6 class="modal-title fw-semibold">¿Eliminar acción?</h6>
+                <button type="button" class="btn-close btn-sm"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <p class="text-muted small mb-0" id="eliminar-accion-titulo"></p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-sm btn-danger"
+                        id="btn-confirmar-eliminar-accion">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 (function () {
     'use strict';
 
-    var lista     = document.getElementById('acciones-lista');
-    var countEl   = document.getElementById('acciones-count');
-    var alertaEl  = document.getElementById('alerta-sin-accion');
+    var lista         = document.getElementById('acciones-lista');
+    var countEl       = document.getElementById('acciones-count');
+    var alertaEl      = document.getElementById('alerta-sin-accion');
+    var completadasEl = document.getElementById('completadas-collapse');
 
-    if (!lista) return;
+    // ── Helpers ───────────────────────────────────────────────
+    var MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    var DIAS  = ['dom','lun','mar','mié','jue','vie','sáb'];
+
+    function fmtHoy() {
+        var d = new Date();
+        return DIAS[d.getDay()] + ' ' + d.getDate() + ' ' + MESES[d.getMonth()];
+    }
+
+    function escHTML(str) {
+        return String(str)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ── Insertar fila en sección completadas ──────────────────
+    function insertarCompletada(id, titulo) {
+        if (!completadasEl) return;
+
+        var vacio = completadasEl.querySelector('p.text-muted');
+        if (vacio) vacio.remove();
+
+        var listGroup = completadasEl.querySelector('.list-group');
+        if (!listGroup) {
+            listGroup = document.createElement('div');
+            listGroup.className = 'list-group list-group-flush';
+            completadasEl.appendChild(listGroup);
+        }
+
+        var fila = document.createElement('div');
+        fila.className = 'list-group-item px-2 py-2 border-0 border-bottom';
+        fila.dataset.completadaId = id;
+        fila.innerHTML =
+            '<div class="d-flex align-items-center gap-2">' +
+                '<i class="bi bi-check-circle-fill text-success flex-shrink-0"' +
+                   ' style="font-size:.85rem"></i>' +
+                '<div class="flex-grow-1">' +
+                    '<span class="small text-muted" style="text-decoration:line-through">' +
+                        escHTML(titulo) +
+                    '</span>' +
+                '</div>' +
+                '<span class="text-muted flex-shrink-0"' +
+                      ' style="font-size:.75rem;white-space:nowrap">' +
+                    fmtHoy() +
+                '</span>' +
+                '<button class="btn btn-sm btn-outline-secondary btn-reactivar-accion flex-shrink-0"' +
+                        ' data-id="' + escHTML(id) + '"' +
+                        ' title="Mover de vuelta a próximas acciones">' +
+                    '<i class="bi bi-arrow-counterclockwise"></i>' +
+                '</button>' +
+                '<button class="btn btn-sm btn-outline-danger btn-eliminar-accion flex-shrink-0"' +
+                        ' data-id="' + escHTML(id) + '"' +
+                        ' data-titulo="' + escHTML(titulo) + '"' +
+                        ' title="Eliminar acción">' +
+                    '<i class="bi bi-trash"></i>' +
+                '</button>' +
+            '</div>';
+        listGroup.insertAdjacentElement('afterbegin', fila);
+
+        var btnCollapse = document.querySelector('[data-bs-target="#completadas-collapse"]');
+        if (btnCollapse) {
+            var spanCount = btnCollapse.querySelector('span.fw-semibold');
+            if (spanCount) {
+                var m = spanCount.textContent.match(/\d+/);
+                var n = m ? parseInt(m[0], 10) : 0;
+                spanCount.textContent = 'Acciones completadas (' + (n + 1) + ')';
+            }
+        }
+    }
 
     function completarAccion(id, btnEl) {
         btnEl.disabled = true;
@@ -193,18 +314,24 @@ $totalActivas = count($acciones);
                 return;
             }
 
-            var fila = lista.querySelector('[data-id="' + id + '"]');
+            var fila   = lista ? lista.querySelector('.acciones-item[data-id="' + id + '"]') : null;
+            var titulo = '';
             if (fila) {
+                var textoEl = fila.querySelector('.item-text');
+                titulo = textoEl ? textoEl.textContent.trim() : '';
                 fila.style.transition = 'opacity .25s';
                 fila.style.opacity    = '0';
                 setTimeout(function () {
                     fila.remove();
-                    var restantes = lista.querySelectorAll('.acciones-item').length;
+                    insertarCompletada(id, titulo);
+                    var restantes = lista ? lista.querySelectorAll('.acciones-item').length : 0;
                     if (countEl) countEl.textContent = restantes;
                     if (restantes === 0 && alertaEl) {
                         alertaEl.classList.remove('d-none');
                     }
                 }, 260);
+            } else {
+                insertarCompletada(id, titulo);
             }
 
             // Actualizar badge sidebar
@@ -220,17 +347,17 @@ $totalActivas = count($acciones);
         });
     }
 
-    lista.addEventListener('click', function (e) {
-        var btn = e.target.closest('.btn-done, .btn-check-circular, .btn-completar-accion');
-        if (btn) {
-            var id = btn.dataset.itemId;
-            if (id) completarAccion(id, btn);
-        }
-    });
+    if (lista) {
+        lista.addEventListener('click', function (e) {
+            var btn = e.target.closest('.btn-done, .btn-check-circular, .btn-completar-accion');
+            if (btn) {
+                var id = btn.dataset.itemId;
+                if (id) completarAccion(id, btn);
+            }
+        });
+    }
 
     // ── Reactivar acción completada ───────────────────────────
-    var completadasEl = document.getElementById('completadas-collapse');
-
     if (completadasEl) {
         completadasEl.addEventListener('click', function (e) {
             var btn = e.target.closest('.btn-reactivar-accion');
@@ -257,6 +384,77 @@ $totalActivas = count($acciones);
                 btn.disabled = false;
                 alert('Error de conexión. Inténtalo de nuevo.');
             });
+        });
+    }
+
+    // ── Eliminar acción ──────────────────────────────────────
+    var modalEliminarEl  = document.getElementById('modalConfirmarEliminarAccion');
+    var btnConfirmarElim = document.getElementById('btn-confirmar-eliminar-accion');
+    var tituloElimEl     = document.getElementById('eliminar-accion-titulo');
+    var deleteAccionId   = null;
+
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.btn-eliminar-accion');
+        if (!btn) return;
+        deleteAccionId = btn.dataset.id;
+        if (tituloElimEl) {
+            tituloElimEl.textContent = '"' + (btn.dataset.titulo || 'esta acción') + '"';
+        }
+        bootstrap.Modal.getOrCreateInstance(modalEliminarEl).show();
+    });
+
+    if (btnConfirmarElim) {
+        btnConfirmarElim.addEventListener('click', function () {
+            if (!deleteAccionId) return;
+            btnConfirmarElim.disabled = true;
+            var id = deleteAccionId;
+            fetch('/acciones/' + encodeURIComponent(id), {
+                method: 'DELETE',
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                bootstrap.Modal.getInstance(modalEliminarEl).hide();
+                if (data.ok) {
+                    var itemActivo = lista
+                        ? lista.querySelector('.acciones-item[data-id="' + id + '"]')
+                        : null;
+                    var itemCompletado = document.querySelector(
+                        '.list-group-item[data-completada-id="' + id + '"]'
+                    );
+                    var item     = itemActivo || itemCompletado;
+                    var esActivo = !!itemActivo;
+
+                    if (item) {
+                        item.style.transition = 'opacity .3s';
+                        item.style.opacity    = '0';
+                        setTimeout(function () {
+                            item.remove();
+                            if (esActivo) {
+                                var restantes = lista
+                                    ? lista.querySelectorAll('.acciones-item').length
+                                    : 0;
+                                if (countEl) countEl.textContent = restantes;
+                                if (restantes === 0 && alertaEl) {
+                                    alertaEl.classList.remove('d-none');
+                                }
+                            }
+                        }, 300);
+                    }
+                } else {
+                    alert(data.error || 'Error al eliminar.');
+                }
+                btnConfirmarElim.disabled = false;
+                deleteAccionId = null;
+            })
+            .catch(function () {
+                alert('Error de conexión.');
+                btnConfirmarElim.disabled = false;
+                deleteAccionId = null;
+            });
+        });
+
+        modalEliminarEl.addEventListener('hidden.bs.modal', function () {
+            deleteAccionId = null;
         });
     }
 

@@ -232,9 +232,12 @@ class ProyectosController extends Controller
 
         $db   = Database::connection();
         $stmt = $db->prepare(
-            'SELECT id, nombre, resultado_deseado, estado, area_id
-             FROM proyectos
-             WHERE id = ? AND usuario_id = ? AND deleted_at IS NULL LIMIT 1'
+            'SELECT p.id, p.nombre, p.resultado_deseado, p.estado,
+                    p.area_id, p.created_at,
+                    a.nombre AS area_nombre, a.color AS area_color
+             FROM proyectos p
+             LEFT JOIN areas a ON a.id = p.area_id AND a.deleted_at IS NULL
+             WHERE p.id = ? AND p.usuario_id = ? AND p.deleted_at IS NULL LIMIT 1'
         );
         $stmt->execute([$id, $uid]);
         $proyecto = $stmt->fetch();
