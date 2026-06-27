@@ -127,7 +127,7 @@ class Router
         $this->post('/referencia/activar',          'ReferenciaController', 'activar');
 
         // Completadas
-        $this->get('/completadas',         'InboxController',      'completadas');
+        $this->get('/completadas',         'CompletadasController', 'index');
 
         // Revisión semanal
         $this->get('/revision',                        'RevisionController', 'index');
