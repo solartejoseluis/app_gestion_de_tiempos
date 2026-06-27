@@ -18,7 +18,7 @@ class SidebarCounters
                                                                         AND deleted_at IS NULL)                       AS espera_vencidas,
                 (SELECT COUNT(*) FROM items       WHERE usuario_id = ? AND tipo = 'incubada'  AND deleted_at IS NULL) AS someday,
                 (SELECT COUNT(*) FROM items       WHERE usuario_id = ? AND tipo = 'referencia' AND deleted_at IS NULL) AS referencia,
-                (SELECT MAX(fecha_completada) FROM revisiones_semanales WHERE usuario_id = ?)                          AS ultima_revision
+                (SELECT MAX(fecha_fin) FROM revisiones_semanales WHERE usuario_id = ? AND completada = 1)            AS ultima_revision
         ");
         $stmt->execute(array_fill(0, 8, $usuarioId));
         $row = $stmt->fetch();
@@ -35,7 +35,8 @@ class SidebarCounters
             'espera_vencidas' => (int) $row['espera_vencidas'],
             'someday'         => (int) $row['someday'],
             'referencia'      => (int) $row['referencia'],
-            'revision_ok'     => $revisionReciente,
+            'revision_ok'      => $revisionReciente,
+            'revision_vencida' => !$revisionReciente,
         ];
     }
 }

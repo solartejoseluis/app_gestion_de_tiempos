@@ -58,7 +58,7 @@
         <a href="/revision" class="nav-item <?= $currentRoute === '/revision' ? 'active' : '' ?>">
             <i class="bi bi-arrow-repeat"></i>
             <span class="nav-label">Revisión semanal</span>
-            <?php if (!$counters['revision_ok']): ?>
+            <?php if ($counters['revision_vencida']): ?>
                 <span class="nav-badge badge-warn">!</span>
             <?php endif; ?>
         </a>

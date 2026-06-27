@@ -63,7 +63,10 @@ class Router
         $this->post('/login',        'AuthController',    'login');
         $this->get('/logout',        'AuthController',    'logout');
 
-        // Dashboard — Inbox
+        // Dashboard
+        $this->get('/dashboard',       'InboxController', 'index');
+
+        // Inbox
         $this->get('/inbox/lista',     'InboxController', 'lista');
         $this->get('/inbox',           'InboxController', 'index');
         $this->post('/inbox/store',    'InboxController', 'store');
@@ -109,6 +112,7 @@ class Router
         $this->get('/espera',                'EsperaController', 'index');
         $this->post('/espera/recibido',      'EsperaController', 'recibido');
         $this->post('/espera/posponer',      'EsperaController', 'posponer');
+        $this->post('/espera/convertir',     'EsperaController', 'convertir');
 
         // Algún día
         $this->get('/someday',              'SomedayController', 'index');
@@ -126,11 +130,13 @@ class Router
         $this->get('/completadas',         'InboxController',      'completadas');
 
         // Revisión semanal
-        $this->get('/revision',             'RevisionController', 'index');
-        $this->post('/revision',            'RevisionController', 'iniciar');
-        $this->patch('/revision/{id}/paso', 'RevisionController', 'actualizarPaso');
-        $this->patch('/revision/{id}/completar', 'RevisionController', 'completar');
-        $this->get('/revision/historial',   'RevisionController', 'historial');
+        $this->get('/revision',                        'RevisionController', 'index');
+        $this->get('/revision/historial',              'RevisionController', 'historial');
+        $this->get('/revision/cierre',                 'RevisionController', 'cierre');
+        $this->get('/revision/paso/{paso}',            'RevisionController', 'verPaso');
+        $this->post('/revision/iniciar',               'RevisionController', 'iniciar');
+        $this->post('/revision/paso/{paso}/completar', 'RevisionController', 'completarPaso');
+        $this->post('/revision/completar',             'RevisionController', 'completarRevision');
 
         // Configuración
         $this->get('/config/exportar',                 'ConfigController', 'exportar');

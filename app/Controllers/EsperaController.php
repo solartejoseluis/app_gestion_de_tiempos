@@ -62,6 +62,33 @@ class EsperaController extends Controller
         $this->json(null);
     }
 
+    public function convertir(): void
+    {
+        $this->requireAuth();
+        $id  = (int) ($_POST['id'] ?? 0);
+        $uid = (int) $_SESSION['usuario_id'];
+
+        if ($id <= 0) {
+            $this->error('ID inválido.');
+        }
+
+        $db   = Database::connection();
+        $stmt = $db->prepare(
+            'SELECT id FROM items
+             WHERE id = ? AND usuario_id = ? AND deleted_at IS NULL LIMIT 1'
+        );
+        $stmt->execute([$id, $uid]);
+        if (!$stmt->fetch()) {
+            $this->error('No autorizado.', 403);
+        }
+
+        $db->prepare(
+            "UPDATE items SET tipo = 'accion', persona_id = NULL WHERE id = ?"
+        )->execute([$id]);
+
+        $this->json(null);
+    }
+
     public function posponer(): void
     {
         $this->requireAuth();
