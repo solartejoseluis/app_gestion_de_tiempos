@@ -113,6 +113,36 @@ $totalActivas = count($acciones);
                                     </span>
                                 <?php endif; ?>
                             </div>
+
+                            <!-- Notas inline -->
+                            <div class="notas-wrapper mt-2">
+                                <?php if (!empty($item['notas'])): ?>
+                                    <textarea class="notas-inline form-control form-control-sm"
+                                              data-id="<?= $item['id'] ?>"
+                                              rows="3"
+                                              maxlength="5000"
+                                              placeholder="Notas, pasos o contexto de esta acción..."
+                                              style="font-size:.82rem;resize:vertical;background:#fffef5;border-color:#e8e4c8;"
+                                    ><?= htmlspecialchars($item['notas']) ?></textarea>
+                                    <div class="notas-guardado text-muted d-none" style="font-size:.72rem">Guardado</div>
+                                <?php else: ?>
+                                    <button class="btn-toggle-notas btn btn-link btn-sm text-muted p-0"
+                                            data-id="<?= $item['id'] ?>"
+                                            style="font-size:.78rem;text-decoration:none">
+                                        <i class="bi bi-journal-text me-1"></i>Agregar notas
+                                    </button>
+                                    <div class="notas-expandida d-none">
+                                        <textarea class="notas-inline form-control form-control-sm"
+                                                  data-id="<?= $item['id'] ?>"
+                                                  rows="3"
+                                                  maxlength="5000"
+                                                  placeholder="Notas, pasos o contexto de esta acción..."
+                                                  style="font-size:.82rem;resize:vertical;background:#fffef5;border-color:#e8e4c8;"
+                                        ></textarea>
+                                        <div class="notas-guardado text-muted d-none" style="font-size:.72rem">Guardado</div>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         </div>
 
                         <div class="item-actions">
@@ -455,6 +485,50 @@ $totalActivas = count($acciones);
 
         modalEliminarEl.addEventListener('hidden.bs.modal', function () {
             deleteAccionId = null;
+        });
+    }
+
+    // ── Notas inline ─────────────────────────────────────────
+    var debNotasPrj = {};
+
+    if (lista) {
+        lista.addEventListener('click', function (e) {
+            var btn = e.target.closest('.btn-toggle-notas');
+            if (!btn) return;
+            var wrapper   = btn.closest('.notas-wrapper');
+            var expandida = wrapper ? wrapper.querySelector('.notas-expandida') : null;
+            if (!expandida) return;
+            btn.classList.add('d-none');
+            expandida.classList.remove('d-none');
+            var ta = expandida.querySelector('.notas-inline');
+            if (ta) ta.focus();
+        });
+
+        lista.addEventListener('input', function (e) {
+            var ta = e.target.closest('.notas-inline');
+            if (!ta) return;
+            var id         = ta.dataset.id;
+            var valor      = ta.value;
+            var wrapper    = ta.closest('.notas-wrapper');
+            var guardadoEl = wrapper ? wrapper.querySelector('.notas-guardado') : null;
+
+            clearTimeout(debNotasPrj[id]);
+            debNotasPrj[id] = setTimeout(async function () {
+                try {
+                    var res = await fetch('/acciones/' + encodeURIComponent(id), {
+                        method:  'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body:    new URLSearchParams({ notas: valor, _method: 'PATCH' }),
+                    });
+                    var data = await res.json();
+                    if (data.ok && guardadoEl) {
+                        guardadoEl.classList.remove('d-none');
+                        setTimeout(function () {
+                            guardadoEl.classList.add('d-none');
+                        }, 2000);
+                    }
+                } catch (_) { /* silencioso */ }
+            }, 800);
         });
     }
 

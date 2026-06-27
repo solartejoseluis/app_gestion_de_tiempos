@@ -210,3 +210,57 @@
     });
 
 })();
+
+// ── Notas inline ─────────────────────────────────────────────────
+(function () {
+    'use strict';
+
+    var lista = document.getElementById('acciones-lista');
+    if (!lista) return;
+
+    var debNotas = {};
+
+    // Toggle "Agregar notas"
+    lista.addEventListener('click', function (e) {
+        var btn = e.target.closest('.btn-toggle-notas');
+        if (!btn) return;
+        var wrapper   = btn.closest('.notas-wrapper');
+        var expandida = wrapper ? wrapper.querySelector('.notas-expandida') : null;
+        var textarea  = expandida ? expandida.querySelector('.notas-inline') : null;
+        if (!expandida) return;
+        btn.classList.add('d-none');
+        expandida.classList.remove('d-none');
+        if (textarea) textarea.focus();
+    });
+
+    // Autoguardado con debounce 800 ms
+    lista.addEventListener('input', function (e) {
+        var ta = e.target.closest('.notas-inline');
+        if (!ta) return;
+        var id         = ta.dataset.id;
+        var valor      = ta.value;
+        var wrapper    = ta.closest('.notas-wrapper');
+        var guardadoEl = wrapper ? wrapper.querySelector('.notas-guardado') : null;
+
+        clearTimeout(debNotas[id]);
+        debNotas[id] = setTimeout(async function () {
+            try {
+                var res = await fetch('/acciones/' + encodeURIComponent(id), {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body:    new URLSearchParams({ notas: valor, _method: 'PATCH' }),
+                });
+                var data = await res.json();
+                if (data.ok && guardadoEl) {
+                    guardadoEl.classList.remove('d-none');
+                    setTimeout(function () {
+                        guardadoEl.classList.add('d-none');
+                    }, 2000);
+                }
+            } catch (_) {
+                // silencioso — no interrumpir la escritura
+            }
+        }, 800);
+    });
+
+}());

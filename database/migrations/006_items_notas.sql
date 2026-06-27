@@ -1,0 +1,3 @@
+ALTER TABLE items
+    ADD COLUMN notas TEXT NULL DEFAULT NULL
+    AFTER titulo;

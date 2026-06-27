@@ -66,17 +66,47 @@ class AccionesController extends Controller
             $this->error('No autorizado.', 403);
         }
 
-        $titulo      = trim($this->input('titulo', ''));
-        $contextoId  = (int) $this->input('contexto_id', 0) ?: null;
-        $fechaAccion = trim($this->input('fecha_accion', '')) ?: null;
+        // Soporta form-urlencoded (_method=PATCH desde POST) y JSON
+        $isJson = str_contains($_SERVER['CONTENT_TYPE'] ?? '', 'application/json');
+        $body   = $isJson
+            ? (array) json_decode(file_get_contents('php://input'), true)
+            : $_POST;
 
-        if ($titulo === '') {
-            $this->error('El título es obligatorio.');
+        $sets   = [];
+        $params = [];
+
+        if (array_key_exists('titulo', $body)) {
+            $titulo = trim((string) ($body['titulo'] ?? ''));
+            if ($titulo === '') {
+                $this->error('El título es obligatorio.');
+            }
+            $sets[]   = 'titulo = ?';
+            $params[] = $titulo;
         }
 
+        if (array_key_exists('contexto_id', $body)) {
+            $sets[]   = 'contexto_id = ?';
+            $params[] = (int) ($body['contexto_id'] ?? 0) ?: null;
+        }
+
+        if (array_key_exists('fecha_accion', $body)) {
+            $sets[]   = 'fecha_accion = ?';
+            $params[] = trim((string) ($body['fecha_accion'] ?? '')) ?: null;
+        }
+
+        if (array_key_exists('notas', $body)) {
+            $sets[]   = 'notas = ?';
+            $params[] = $body['notas'] === '' ? null : $body['notas'];
+        }
+
+        if (empty($sets)) {
+            $this->error('No hay campos a actualizar.');
+        }
+
+        $params[] = $id;
         $db->prepare(
-            'UPDATE items SET titulo = ?, contexto_id = ?, fecha_accion = ? WHERE id = ?'
-        )->execute([$titulo, $contextoId, $fechaAccion, $id]);
+            'UPDATE items SET ' . implode(', ', $sets) . ' WHERE id = ?'
+        )->execute($params);
 
         $this->json(null);
     }
