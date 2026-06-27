@@ -53,8 +53,8 @@ class SomedayController extends Controller
         $this->assertItem($id);
 
         Database::connection()
-            ->prepare("UPDATE items SET tipo = 'inbox' WHERE id = ?")
-            ->execute([$id]);
+            ->prepare("UPDATE items SET tipo = 'accion' WHERE id = ? AND usuario_id = ?")
+            ->execute([$id, $this->uid()]);
 
         $this->json(null);
     }

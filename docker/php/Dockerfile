@@ -20,8 +20,17 @@ RUN apt-get update && apt-get install -y \
     bcmath \
     gd \
     zip \
+    opcache \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
+
+# Configuración OPcache
+RUN echo "opcache.enable=1\n\
+opcache.memory_consumption=128\n\
+opcache.interned_strings_buffer=8\n\
+opcache.max_accelerated_files=4000\n\
+opcache.revalidate_freq=60\n\
+opcache.fast_shutdown=1" > /usr/local/etc/php/conf.d/opcache-recommended.ini
 
 # Habilitar mod_rewrite para el Router MVC
 RUN a2enmod rewrite

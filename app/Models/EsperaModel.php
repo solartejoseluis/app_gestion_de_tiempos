@@ -9,7 +9,7 @@ class EsperaModel extends Model
     {
         $sql = "
             SELECT
-                i.id, i.titulo, i.area_id, i.contexto_id, i.persona_id,
+                i.id, i.titulo, i.notas, i.area_id, i.contexto_id, i.persona_id,
                 i.fecha_accion, i.fecha_delegacion, i.created_at,
                 p.nombre AS persona_nombre,
                 c.nombre AS contexto_nombre,

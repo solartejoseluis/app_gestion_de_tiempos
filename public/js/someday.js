@@ -239,3 +239,47 @@
     actualizarContador();
 
 })();
+
+// ── Notas inline ─────────────────────────────────────────
+(function () {
+    'use strict';
+    var lista = document.getElementById('someday-lista');
+    if (!lista) return;
+    var debNotas = {};
+
+    lista.addEventListener('click', function (e) {
+        var btn = e.target.closest('.btn-toggle-notas');
+        if (!btn) return;
+        var wrapper   = btn.closest('.notas-wrapper');
+        var expandida = wrapper ? wrapper.querySelector('.notas-expandida') : null;
+        if (!expandida) return;
+        btn.classList.add('d-none');
+        expandida.classList.remove('d-none');
+        var ta = expandida.querySelector('.notas-inline');
+        if (ta) ta.focus();
+    });
+
+    lista.addEventListener('input', function (e) {
+        var ta = e.target.closest('.notas-inline');
+        if (!ta) return;
+        var id         = ta.dataset.id;
+        var valor      = ta.value;
+        var wrapper    = ta.closest('.notas-wrapper');
+        var guardadoEl = wrapper ? wrapper.querySelector('.notas-guardado') : null;
+        clearTimeout(debNotas[id]);
+        debNotas[id] = setTimeout(async function () {
+            try {
+                var res = await fetch('/acciones/' + encodeURIComponent(id), {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body:    new URLSearchParams({ notas: valor, _method: 'PATCH' }),
+                });
+                var data = await res.json();
+                if (data.ok && guardadoEl) {
+                    guardadoEl.classList.remove('d-none');
+                    setTimeout(function () { guardadoEl.classList.add('d-none'); }, 2000);
+                }
+            } catch (_) { /* silencioso */ }
+        }, 800);
+    });
+}());

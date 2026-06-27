@@ -89,6 +89,36 @@ $vencidos = count(array_filter($items, fn($i) => $i['fecha_accion'] !== null && 
                             <span class="tag tag-alert fw-bold">Vencido</span>
                         <?php endif; ?>
                     </div>
+
+                    <!-- Notas inline -->
+                    <div class="notas-wrapper mt-2">
+                        <?php if (!empty($item['notas'])): ?>
+                            <textarea class="notas-inline form-control form-control-sm"
+                                      data-id="<?= $item['id'] ?>"
+                                      rows="3"
+                                      maxlength="5000"
+                                      placeholder="Notas, pasos o contexto..."
+                                      style="font-size:.82rem;resize:vertical;background:#fffef5;border-color:#e8e4c8;"
+                            ><?= htmlspecialchars($item['notas']) ?></textarea>
+                            <div class="notas-guardado text-muted d-none" style="font-size:.72rem">Guardado</div>
+                        <?php else: ?>
+                            <button class="btn-toggle-notas btn btn-link btn-sm text-muted p-0"
+                                    data-id="<?= $item['id'] ?>"
+                                    style="font-size:.78rem;text-decoration:none">
+                                <i class="bi bi-journal-text me-1"></i>Agregar notas
+                            </button>
+                            <div class="notas-expandida d-none">
+                                <textarea class="notas-inline form-control form-control-sm"
+                                          data-id="<?= $item['id'] ?>"
+                                          rows="3"
+                                          maxlength="5000"
+                                          placeholder="Notas, pasos o contexto..."
+                                          style="font-size:.82rem;resize:vertical;background:#fffef5;border-color:#e8e4c8;"
+                                ></textarea>
+                                <div class="notas-guardado text-muted d-none" style="font-size:.72rem">Guardado</div>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
 
                 <div class="item-actions">
