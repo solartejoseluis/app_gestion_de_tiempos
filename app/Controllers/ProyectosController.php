@@ -47,6 +47,57 @@ class ProyectosController extends Controller
         ]);
     }
 
+    public function update(string $id): void
+    {
+        $this->requireAuth();
+        $id  = (int) $id;
+        $uid = (int) $_SESSION['usuario_id'];
+
+        if ($id <= 0) {
+            $this->error('ID inválido.');
+        }
+
+        $body = (array) json_decode(file_get_contents('php://input'), true);
+
+        $sets   = [];
+        $params = [];
+
+        if (array_key_exists('nombre', $body)) {
+            $nombre = trim((string) ($body['nombre'] ?? ''));
+            if ($nombre === '') {
+                $this->error('El nombre es obligatorio.');
+            }
+            $sets[]   = 'nombre = ?';
+            $params[] = $nombre;
+        }
+
+        if (array_key_exists('resultado_deseado', $body)) {
+            $sets[]   = 'resultado_deseado = ?';
+            $params[] = trim((string) ($body['resultado_deseado'] ?? '')) ?: null;
+        }
+
+        if (empty($sets)) {
+            $this->error('No hay campos a actualizar.');
+        }
+
+        $db   = Database::connection();
+        $stmt = $db->prepare(
+            'SELECT id FROM proyectos
+             WHERE id = ? AND usuario_id = ? AND deleted_at IS NULL LIMIT 1'
+        );
+        $stmt->execute([$id, $uid]);
+        if (!$stmt->fetch()) {
+            $this->error('No autorizado.', 403);
+        }
+
+        $params[] = $id;
+        $db->prepare(
+            'UPDATE proyectos SET ' . implode(', ', $sets) . ' WHERE id = ?'
+        )->execute($params);
+
+        $this->json(null);
+    }
+
     public function completar(): void
     {
         $this->requireAuth();

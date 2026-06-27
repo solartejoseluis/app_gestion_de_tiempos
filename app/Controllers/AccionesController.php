@@ -46,6 +46,68 @@ class AccionesController extends Controller
         ]);
     }
 
+    public function update(string $id): void
+    {
+        $this->requireAuth();
+        $id  = (int) $id;
+        $uid = (int) $_SESSION['usuario_id'];
+
+        if ($id <= 0) {
+            $this->error('ID inválido.');
+        }
+
+        $db   = Database::connection();
+        $stmt = $db->prepare(
+            'SELECT id FROM items
+             WHERE id = ? AND usuario_id = ? AND deleted_at IS NULL LIMIT 1'
+        );
+        $stmt->execute([$id, $uid]);
+        if (!$stmt->fetch()) {
+            $this->error('No autorizado.', 403);
+        }
+
+        $titulo      = trim($this->input('titulo', ''));
+        $contextoId  = (int) $this->input('contexto_id', 0) ?: null;
+        $fechaAccion = trim($this->input('fecha_accion', '')) ?: null;
+
+        if ($titulo === '') {
+            $this->error('El título es obligatorio.');
+        }
+
+        $db->prepare(
+            'UPDATE items SET titulo = ?, contexto_id = ?, fecha_accion = ? WHERE id = ?'
+        )->execute([$titulo, $contextoId, $fechaAccion, $id]);
+
+        $this->json(null);
+    }
+
+    public function reactivar(string $id): void
+    {
+        $this->requireAuth();
+        $id  = (int) $id;
+        $uid = (int) $_SESSION['usuario_id'];
+
+        if ($id <= 0) {
+            $this->error('ID inválido.');
+        }
+
+        $db   = Database::connection();
+        $stmt = $db->prepare(
+            'SELECT id FROM items
+             WHERE id = ? AND usuario_id = ? AND deleted_at IS NULL LIMIT 1'
+        );
+        $stmt->execute([$id, $uid]);
+        if (!$stmt->fetch()) {
+            $this->error('No autorizado.', 403);
+        }
+
+        $db->prepare(
+            "UPDATE items SET tipo = 'proyecto_accion', fecha_completada = NULL WHERE id = ?"
+        )->execute([$id]);
+
+        $this->json(null);
+    }
+
     public function completar(): void
     {
         $this->requireAuth();

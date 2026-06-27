@@ -91,7 +91,8 @@ class Router
 
         // Próximas acciones
         $this->get('/acciones',                  'AccionesController', 'index');
-        $this->post('/acciones/completar',       'AccionesController', 'completar');
+        $this->post('/acciones/completar',         'AccionesController', 'completar');
+        $this->post('/acciones/{id}/reactivar',  'AccionesController', 'reactivar');
         $this->patch('/acciones/{id}',           'AccionesController', 'update');
         $this->patch('/acciones/{id}/completar', 'AccionesController', 'completar');
         $this->delete('/acciones/{id}',          'AccionesController', 'destroy');

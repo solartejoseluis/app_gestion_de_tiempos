@@ -1092,4 +1092,94 @@
         }
     }
 
+
+    // ═══════════════════════════════════════════════════════════════
+    // PROYECTOS (Config)
+    // ═══════════════════════════════════════════════════════════════
+
+    var proyectosPaneEl  = document.getElementById('pane-proyectos');
+    var debPrjTimers     = {};
+    var pendingPrjValues = {}; // id → valor pendiente de guardar
+
+    async function patchProyecto(id, nombre) {
+        var res = await fetch('/proyectos/' + encodeURIComponent(id), {
+            method:  'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ nombre: nombre }),
+        });
+        return res.json();
+    }
+
+    if (proyectosPaneEl) {
+        // ── Autoguardado con debounce ────────────────────────────
+        proyectosPaneEl.addEventListener('focusout', function (e) {
+            var input = e.target.closest('.proyecto-cfg-nombre');
+            if (!input) return;
+
+            var id    = input.dataset.id;
+            var valor = input.value.trim();
+
+            // Registrar valor pendiente para que el handler de
+            // navegación lo detecte si el click llega antes del debounce
+            pendingPrjValues[id] = valor;
+
+            clearTimeout(debPrjTimers[id + '-nombre']);
+            debPrjTimers[id + '-nombre'] = setTimeout(async function () {
+                limpiarErrorInline(input);
+                try {
+                    var data = await patchProyecto(id, valor);
+                    if (data.ok) {
+                        mostrarAutosave();
+                        delete pendingPrjValues[id];
+                    } else {
+                        errorInline(input, data.error || 'Error al guardar.');
+                    }
+                } catch (_) {
+                    errorInline(input, 'Error de conexión.');
+                }
+            }, 300);
+        });
+
+        // ── Navegación a "Ver acciones" con flush del pendiente ──
+        // focusout siempre dispara ANTES que click, así que cuando
+        // llega el click el debounce ya está programado pero aún
+        // no ha ejecutado el PATCH. Lo cancelamos y hacemos el
+        // PATCH de inmediato antes de navegar.
+        proyectosPaneEl.addEventListener('click', async function (e) {
+            var btn = e.target.closest('.btn-ver-acciones-cfg');
+            if (!btn) return;
+
+            var id   = btn.dataset.id;
+            var href = btn.dataset.href;
+
+            clearTimeout(debPrjTimers[id + '-nombre']);
+
+            if (pendingPrjValues[id] !== undefined) {
+                var valor = pendingPrjValues[id];
+                var input = proyectosPaneEl.querySelector(
+                    '.proyecto-cfg-nombre[data-id="' + id + '"]'
+                );
+                if (input) limpiarErrorInline(input);
+
+                btn.disabled = true;
+                try {
+                    var data = await patchProyecto(id, valor);
+                    if (data.ok) {
+                        delete pendingPrjValues[id];
+                    } else {
+                        if (input) errorInline(input, data.error || 'Error al guardar.');
+                        btn.disabled = false;
+                        return; // No navegar si hubo error
+                    }
+                } catch (_) {
+                    if (input) errorInline(input, 'Error de conexión.');
+                    btn.disabled = false;
+                    return;
+                }
+            }
+
+            window.location.href = href;
+        });
+    }
+
 }());

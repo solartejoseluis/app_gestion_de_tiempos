@@ -52,10 +52,14 @@ $hayProyectos = !empty($proyectos) || !empty($proyectosCompletados);
 
                     <!-- Nombre + badge estado -->
                     <div class="d-flex align-items-center justify-content-between mb-1">
-                        <span class="proyecto-nombre">
-                            <?= htmlspecialchars($p['nombre']) ?>
-                        </span>
-                        <span class="ms-2">
+                        <div class="flex-grow-1 me-2">
+                            <input type="text"
+                                   class="proyecto-cfg-nombre form-control form-control-sm border-0 bg-transparent p-0 fw-semibold"
+                                   data-id="<?= $p['id'] ?>"
+                                   value="<?= htmlspecialchars($p['nombre'], ENT_QUOTES) ?>"
+                                   maxlength="200">
+                        </div>
+                        <span class="ms-2 flex-shrink-0">
                             <?php if ($p['estado'] === 'activo'): ?>
                                 <span class="badge bg-primary">Activo</span>
                             <?php elseif ($pausa): ?>
@@ -79,10 +83,11 @@ $hayProyectos = !empty($proyectos) || !empty($proyectosCompletados);
 
                     <!-- Acciones -->
                     <div class="d-flex flex-wrap gap-2 mt-1">
-                        <a href="/proyectos/<?= $p['id'] ?>/acciones"
-                           class="btn btn-sm btn-outline-secondary">
+                        <button class="btn btn-sm btn-outline-secondary btn-ver-acciones-cfg"
+                                data-href="/proyectos/<?= $p['id'] ?>/acciones"
+                                data-id="<?= $p['id'] ?>">
                             <i class="bi bi-list-check me-1"></i>Ver acciones
-                        </a>
+                        </button>
 
                         <?php if ($p['estado'] === 'activo'): ?>
                             <button class="btn btn-sm btn-outline-warning cfg-btn-proyecto"

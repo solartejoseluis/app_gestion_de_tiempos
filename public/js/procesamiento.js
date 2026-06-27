@@ -179,10 +179,11 @@
             hide('proc-prog-proyecto-wrap');
 
         } else {
-            const [areasData, personasData, contextosData] = await Promise.all([
+            const [areasData, personasData, contextosData, proyectosData] = await Promise.all([
                 post('/procesar/areas'),
                 post('/procesar/personas'),
                 post('/procesar/contextos'),
+                post('/procesar/proyectos'),
             ]);
 
             if (areasData.ok) {
@@ -203,6 +204,13 @@
             if (contextosData.ok) {
                 ['proc-del-contexto', 'proc-prog-contexto']
                     .forEach(id => poblarSelect(id, contextosData.data, 'Selecciona un contexto'));
+            }
+
+            if (proyectosData.ok) {
+                ['proc-a2-proyecto', 'proc-a3-proyecto',
+                 'proc-del-proyecto', 'proc-prog-proyecto'].forEach(id => {
+                    poblarSelect(id, proyectosData.data, 'Ninguno');
+                });
             }
         }
     });
@@ -441,6 +449,8 @@
             const data = await post(endpoint, datos);
             if (data.ok) {
                 bootstrap.Modal.getInstance(el('modalProcesar')).hide();
+                btnEl.disabled    = false;
+                btnEl.textContent = textoOriginal;
                 await recargarInbox();
                 if (onSuccess) await onSuccess();
             } else {

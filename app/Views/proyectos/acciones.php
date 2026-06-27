@@ -136,9 +136,10 @@ $totalActivas = count($acciones);
                     <?php foreach ($completadas as $c):
                         $fechaComp = $fmtFecha($c['fecha_completada'] ?? $c['updated_at']);
                     ?>
-                        <div class="list-group-item px-2 py-2 border-0 border-bottom">
-                            <div class="d-flex align-items-start gap-2">
-                                <i class="bi bi-check-circle-fill text-success flex-shrink-0 mt-1"
+                        <div class="list-group-item px-2 py-2 border-0 border-bottom"
+                             data-completada-id="<?= $c['id'] ?>">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-check-circle-fill text-success flex-shrink-0"
                                    style="font-size:.85rem"></i>
                                 <div class="flex-grow-1">
                                     <span class="small text-muted"
@@ -147,10 +148,16 @@ $totalActivas = count($acciones);
                                     </span>
                                 </div>
                                 <?php if ($fechaComp): ?>
-                                    <span class="text-muted" style="font-size:.75rem;white-space:nowrap">
+                                    <span class="text-muted flex-shrink-0"
+                                          style="font-size:.75rem;white-space:nowrap">
                                         <?= $fechaComp ?>
                                     </span>
                                 <?php endif; ?>
+                                <button class="btn btn-sm btn-outline-secondary btn-reactivar-accion flex-shrink-0"
+                                        data-id="<?= $c['id'] ?>"
+                                        title="Mover de vuelta a próximas acciones">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -220,6 +227,38 @@ $totalActivas = count($acciones);
             if (id) completarAccion(id, btn);
         }
     });
+
+    // ── Reactivar acción completada ───────────────────────────
+    var completadasEl = document.getElementById('completadas-collapse');
+
+    if (completadasEl) {
+        completadasEl.addEventListener('click', function (e) {
+            var btn = e.target.closest('.btn-reactivar-accion');
+            if (!btn || btn.disabled) return;
+
+            var id = btn.dataset.id;
+            btn.disabled = true;
+
+            fetch('/acciones/' + encodeURIComponent(id) + '/reactivar', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body:    '',
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data.ok) {
+                    btn.disabled = false;
+                    alert(data.error || 'No se pudo reactivar la acción.');
+                    return;
+                }
+                window.location.reload();
+            })
+            .catch(function () {
+                btn.disabled = false;
+                alert('Error de conexión. Inténtalo de nuevo.');
+            });
+        });
+    }
 
 }());
 
