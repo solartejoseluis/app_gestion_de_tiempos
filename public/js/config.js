@@ -1180,6 +1180,64 @@
 
             window.location.href = href;
         });
+
+        // ── Autoguardado de área ─────────────────────────────
+        proyectosPaneEl.addEventListener('change', function (e) {
+            var select = e.target.closest('.proyecto-cfg-area');
+            if (!select) return;
+            var id     = select.dataset.id;
+            var areaId = select.value === '' ? null : parseInt(select.value, 10);
+            fetch('/proyectos/' + encodeURIComponent(id), {
+                method:  'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ area_id: areaId }),
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.ok) {
+                    mostrarAutosave();
+                } else {
+                    mostrarToast(data.error || 'Error al guardar área.');
+                }
+            })
+            .catch(function () {
+                mostrarToast('Error de conexión.');
+            });
+        });
+
+        // ── Eliminar proyecto ────────────────────────────────
+        proyectosPaneEl.addEventListener('click', function (e) {
+            var btn = e.target.closest('.cfg-btn-eliminar-proyecto');
+            if (!btn) return;
+            var id     = btn.dataset.id;
+            var nombre = btn.dataset.nombre || 'este proyecto';
+            confirmar(
+                'Eliminar proyecto',
+                '¿Eliminar "' + nombre + '"? Se eliminarán el proyecto ' +
+                'y todas sus tareas vinculadas. Si quieres conservar ' +
+                'alguna tarea, cámbiala de proyecto primero.',
+                function (modalEl) {
+                    bootstrap.Modal.getInstance(modalEl)?.hide();
+                    btn.disabled = true;
+                    fetch('/proyectos/' + encodeURIComponent(id), {
+                        method: 'DELETE',
+                    })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data.ok) {
+                            window.location.href = '/config?tab=proyectos';
+                        } else {
+                            mostrarToast(data.error || 'Error al eliminar.');
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(function () {
+                        mostrarToast('Error de conexión.');
+                        btn.disabled = false;
+                    });
+                }
+            );
+        });
     }
 
 }());

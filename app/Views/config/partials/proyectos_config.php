@@ -68,6 +68,21 @@ $hayProyectos = !empty($proyectos) || !empty($proyectosCompletados);
                         </span>
                     </div>
 
+                    <!-- Área -->
+                    <div class="mb-2">
+                        <select class="proyecto-cfg-area form-select form-select-sm border-0 bg-transparent p-0"
+                                data-id="<?= $p['id'] ?>"
+                                style="max-width:160px">
+                            <option value="">Sin área</option>
+                            <?php foreach ($areas as $a): ?>
+                                <option value="<?= $a['id'] ?>"
+                                    <?= ($p['area_id'] == $a['id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($a['nombre']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
                     <!-- Resultado deseado -->
                     <?php if ($resCorto !== ''): ?>
                         <p class="proyecto-resultado mb-2"
@@ -107,6 +122,11 @@ $hayProyectos = !empty($proyectos) || !empty($proyectosCompletados);
                                 <i class="bi bi-play me-1"></i>Reactivar
                             </button>
                         <?php endif; ?>
+                        <button class="btn btn-sm btn-outline-danger cfg-btn-eliminar-proyecto"
+                                data-id="<?= $p['id'] ?>"
+                                data-nombre="<?= htmlspecialchars($p['nombre'], ENT_QUOTES) ?>">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </div>
 
                 </div><!-- /.proyecto-card -->
@@ -144,6 +164,11 @@ $hayProyectos = !empty($proyectos) || !empty($proyectosCompletados);
                                         data-id="<?= $p['id'] ?>"
                                         data-accion="reabrir">
                                     <i class="bi bi-arrow-counterclockwise me-1"></i>Reabrir
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger cfg-btn-eliminar-proyecto"
+                                        data-id="<?= $p['id'] ?>"
+                                        data-nombre="<?= htmlspecialchars($p['nombre'], ENT_QUOTES) ?>">
+                                    <i class="bi bi-trash"></i>
                                 </button>
                             </div>
                         </div>

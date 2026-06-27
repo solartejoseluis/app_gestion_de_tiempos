@@ -76,6 +76,14 @@ class ProyectosController extends Controller
             $params[] = trim((string) ($body['resultado_deseado'] ?? '')) ?: null;
         }
 
+        if (array_key_exists('area_id', $body)) {
+            $areaId   = $body['area_id'] === null || $body['area_id'] === ''
+                        ? null
+                        : (int) $body['area_id'];
+            $sets[]   = 'area_id = ?';
+            $params[] = $areaId;
+        }
+
         if (empty($sets)) {
             $this->error('No hay campos a actualizar.');
         }
@@ -140,6 +148,47 @@ class ProyectosController extends Controller
         if (!$model->actualizarEstado($id, $uid, ['estado' => 'activo'])) {
             $this->error('No autorizado.', 403);
         }
+        $this->json(null);
+    }
+
+    public function eliminar(string $id): void
+    {
+        $this->requireAuth();
+        $id  = (int) $id;
+        $uid = (int) $_SESSION['usuario_id'];
+
+        if ($id <= 0) {
+            $this->error('ID inválido.');
+        }
+
+        $db   = Database::connection();
+        $stmt = $db->prepare(
+            'SELECT id FROM proyectos
+             WHERE id = ? AND usuario_id = ? AND deleted_at IS NULL LIMIT 1'
+        );
+        $stmt->execute([$id, $uid]);
+        if (!$stmt->fetch()) {
+            $this->error('No autorizado.', 403);
+        }
+
+        $db->beginTransaction();
+        try {
+            $db->prepare(
+                'UPDATE items SET deleted_at = NOW()
+                 WHERE proyecto_id = ? AND deleted_at IS NULL'
+            )->execute([$id]);
+
+            $db->prepare(
+                'UPDATE proyectos SET deleted_at = NOW()
+                 WHERE id = ? AND usuario_id = ?'
+            )->execute([$id, $uid]);
+
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            $this->error('Error al eliminar el proyecto.');
+        }
+
         $this->json(null);
     }
 

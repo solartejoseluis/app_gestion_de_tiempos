@@ -106,6 +106,7 @@ class Router
         $this->post('/proyectos/pausar',            'ProyectosController', 'pausar');
         $this->post('/proyectos/reactivar',         'ProyectosController', 'reactivar');
         $this->post('/proyectos',                   'ProyectosController', 'store');
+        $this->delete('/proyectos/{id}',            'ProyectosController', 'eliminar');
         $this->patch('/proyectos/{id}',             'ProyectosController', 'update');
         $this->patch('/proyectos/{id}/completar',   'ProyectosController', 'completar');
         $this->patch('/proyectos/{id}/pausar',      'ProyectosController', 'pausar');
