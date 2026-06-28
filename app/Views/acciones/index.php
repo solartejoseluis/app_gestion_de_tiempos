@@ -16,7 +16,15 @@ $total  = count($items);
         <div class="acciones-header">
             <div class="d-flex align-items-center gap-2">
                 <h6 class="acciones-title mb-0">Próximas acciones</h6>
-                <span id="acciones-counter" class="nav-badge badge-blue"><?= $total ?></span>
+                <div class="d-flex align-items-center gap-2">
+                    <span id="acciones-counter" class="nav-badge badge-blue"><?= $total ?></span>
+                    <button id="btn-modo-agenda"
+                            class="btn btn-sm btn-outline-secondary"
+                            title="Vista agenda"
+                            style="font-size:.78rem;padding:3px 10px;">
+                        <i class="bi bi-calendar-week me-1"></i>Agenda
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -102,7 +110,10 @@ $total  = count($items);
                  data-id="<?= $item['id'] ?>"
                  data-contexto-id="<?= $item['contexto_id'] ?? '' ?>"
                  data-area-id="<?= $item['area_id'] ?? '' ?>"
-                 data-proyecto-id="<?= $item['proyecto_id'] ?? '' ?>">
+                 data-proyecto-id="<?= $item['proyecto_id'] ?? '' ?>"
+                 data-fecha-accion="<?= $item['fecha_accion'] ?? '' ?>"
+                 data-tipo-tiempo="<?= $item['tipo_tiempo'] ?? '' ?>"
+                 data-fecha-cita="<?= $item['fecha_cita'] ?? '' ?>">
 
                 <button class="btn-check-circular flex-shrink-0"
                         data-item-id="<?= $item['id'] ?>"
@@ -191,6 +202,8 @@ $total  = count($items);
         <?php endforeach; ?>
 
     </div><!-- /#acciones-lista -->
+
+    <div id="agenda-vista" class="d-none px-3 pb-4"></div>
 
 </div><!-- /.acciones-wrapper -->
 

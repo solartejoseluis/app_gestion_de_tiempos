@@ -264,3 +264,191 @@
     });
 
 }());
+
+// ── Modo Agenda ──────────────────────────────────────────
+(function () {
+    'use strict';
+
+    var btnModo  = document.getElementById('btn-modo-agenda');
+    var listaEl  = document.getElementById('acciones-lista');
+    var agendaEl = document.getElementById('agenda-vista');
+    if (!btnModo || !listaEl || !agendaEl) return;
+
+    var modoAgenda = false;
+
+    // ── Helpers de fecha ─────────────────────────────────
+    var MESES = ['ene','feb','mar','abr','may','jun',
+                 'jul','ago','sep','oct','nov','dic'];
+    var DIAS  = ['dom','lun','mar','mié','jue','vie','sáb'];
+
+    function fmtFechaLarga(dateStr) {
+        var d = new Date(dateStr + 'T00:00:00');
+        return DIAS[d.getDay()] + ' ' + d.getDate() +
+               ' ' + MESES[d.getMonth()];
+    }
+
+    function fmtHora(datetimeStr) {
+        if (!datetimeStr) return '';
+        var d = new Date(datetimeStr);
+        var h = String(d.getHours()).padStart(2, '0');
+        var m = String(d.getMinutes()).padStart(2, '0');
+        return h + ':' + m;
+    }
+
+    function getPeriodo(fechaStr) {
+        if (!fechaStr) return 'sin-fecha';
+        var hoy   = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        var fecha = new Date(fechaStr + 'T00:00:00');
+        var diff  = Math.round((fecha - hoy) / (1000 * 60 * 60 * 24));
+        if (diff < 0)   return 'vencidas';
+        if (diff === 0) return 'hoy';
+        if (diff === 1) return 'manana';
+        if (diff <= 7)  return 'semana';
+        if (diff <= 14) return 'proxima-semana';
+        return 'futuro';
+    }
+
+    function escHTML(str) {
+        return String(str)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ── Construir vista agenda desde los ítems del DOM ───
+    function construirAgenda() {
+        var items = Array.from(
+            listaEl.querySelectorAll('.acciones-item')
+        ).filter(function (el) {
+            return !el.classList.contains('d-none');
+        });
+
+        var grupos = {
+            'vencidas':       { label: '⚠ Vencidas',        items: [], clase: 'text-danger' },
+            'hoy':            { label: 'Hoy',                items: [], clase: 'text-primary fw-bold' },
+            'manana':         { label: 'Mañana',             items: [], clase: '' },
+            'semana':         { label: 'Esta semana',        items: [], clase: '' },
+            'proxima-semana': { label: 'Próxima semana',     items: [], clase: '' },
+            'futuro':         { label: 'Más adelante',       items: [], clase: '' },
+            'sin-fecha':      { label: 'Sin fecha',          items: [], clase: 'text-muted' },
+        };
+        var orden = ['vencidas','hoy','manana','semana',
+                     'proxima-semana','futuro','sin-fecha'];
+
+        items.forEach(function (el) {
+            var periodo = getPeriodo(el.dataset.fechaAccion || null);
+            grupos[periodo].items.push(el);
+        });
+
+        var html = '';
+        orden.forEach(function (key) {
+            var g = grupos[key];
+            if (g.items.length === 0) return;
+
+            html += '<div class="agenda-grupo mb-4">';
+            html += '<div class="agenda-grupo-header ' + g.clase + ' mb-2 pb-1"' +
+                    ' style="border-bottom:2px solid currentColor;font-size:.82rem;' +
+                    'font-weight:600;text-transform:uppercase;letter-spacing:.04em">' +
+                    g.label +
+                    ' <span class="fw-normal opacity-75">(' + g.items.length + ')</span></div>';
+
+            g.items.forEach(function (el) {
+                var titulo    = (el.querySelector('.item-text') || {}).textContent || '';
+                var fecha     = el.dataset.fechaAccion || '';
+                var tipoTiem  = el.dataset.tipoTiempo  || '';
+                var fechaCita = el.dataset.fechaCita   || '';
+                var ctx       = el.querySelector('.tag-ctx');
+                var area      = el.querySelector('.tag-area');
+                var proj      = el.querySelector('.tag-proj');
+
+                var fechaLabel = '';
+                if (fecha) {
+                    fechaLabel = fmtFechaLarga(fecha);
+                    if (tipoTiem === 'cita' && fechaCita) {
+                        fechaLabel += ' · ⏰ ' + fmtHora(fechaCita);
+                    }
+                }
+
+                html += '<div class="agenda-item d-flex align-items-start gap-2 mb-2 p-2 rounded"' +
+                        ' style="background:#f8f8fc">' +
+                    '<div class="flex-grow-1">' +
+                        '<div class="fw-medium" style="font-size:.9rem">' +
+                        escHTML(titulo.trim()) + '</div>' +
+                        '<div class="d-flex flex-wrap gap-1 mt-1">';
+
+                if (fechaLabel) {
+                    html += '<span class="tag ' +
+                            (key === 'vencidas' ? 'tag-alert' : 'tag-date') +
+                            '">' + escHTML(fechaLabel) + '</span>';
+                }
+                if (ctx)  html += ctx.outerHTML;
+                if (area) html += area.outerHTML;
+                if (proj) html += proj.outerHTML;
+
+                html += '</div></div>' +
+                    '<button class="btn btn-sm btn-done agenda-btn-hecho flex-shrink-0"' +
+                    ' data-item-id="' + el.dataset.id + '"' +
+                    ' style="font-size:.75rem;padding:3px 8px">✓ Hecho</button>' +
+                    '</div>';
+            });
+
+            html += '</div>';
+        });
+
+        if (html === '') {
+            html = '<p class="text-muted text-center py-4">No hay acciones que mostrar.</p>';
+        }
+
+        agendaEl.innerHTML = html;
+
+        // Botones "Hecho" dentro del modo agenda
+        agendaEl.querySelectorAll('.agenda-btn-hecho').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var id = btn.dataset.itemId;
+                btn.disabled = true;
+                fetch('/acciones/completar', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body:    'id=' + encodeURIComponent(id),
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.ok) {
+                        var agendaItem = btn.closest('.agenda-item');
+                        if (agendaItem) {
+                            agendaItem.style.transition = 'opacity .25s';
+                            agendaItem.style.opacity    = '0';
+                            setTimeout(function () { agendaItem.remove(); }, 260);
+                        }
+                        // Quitar también del DOM original para que el contador sea correcto
+                        var orig = listaEl.querySelector('[data-id="' + id + '"]');
+                        if (orig) orig.remove();
+                    } else {
+                        btn.disabled = false;
+                    }
+                })
+                .catch(function () { btn.disabled = false; });
+            });
+        });
+    }
+
+    // ── Toggle lista ↔ agenda ────────────────────────────
+    btnModo.addEventListener('click', function () {
+        modoAgenda = !modoAgenda;
+        if (modoAgenda) {
+            construirAgenda();
+            listaEl.classList.add('d-none');
+            agendaEl.classList.remove('d-none');
+            btnModo.classList.remove('btn-outline-secondary');
+            btnModo.classList.add('btn-secondary');
+            btnModo.innerHTML = '<i class="bi bi-list-ul me-1"></i>Lista';
+        } else {
+            agendaEl.classList.add('d-none');
+            listaEl.classList.remove('d-none');
+            btnModo.classList.remove('btn-secondary');
+            btnModo.classList.add('btn-outline-secondary');
+            btnModo.innerHTML = '<i class="bi bi-calendar-week me-1"></i>Agenda';
+        }
+    });
+
+}());
