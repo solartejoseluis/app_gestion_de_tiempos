@@ -16,6 +16,17 @@ $hayAreas     = !empty($areas);
                    placeholder="p. ej. Trabajo, Salud, Familia…"
                    maxlength="100" required>
         </div>
+        <div class="col-sm-8 col-md-6">
+            <label for="area-descripcion-nueva" class="form-label small fw-semibold mb-1">
+                Descripción <span class="text-muted fw-normal">(opcional)</span>
+            </label>
+            <input id="area-descripcion-nueva"
+                   name="descripcion"
+                   type="text"
+                   class="form-control form-control-sm"
+                   placeholder="Para qué sirve esta área..."
+                   maxlength="300">
+        </div>
         <div class="col-auto">
             <label for="area-color-nueva" class="form-label small fw-semibold mb-1">
                 Color
@@ -58,10 +69,19 @@ $hayAreas     = !empty($areas);
         <thead class="table-light">
             <tr>
                 <th style="width:52px">Color</th>
-                <th>Nombre</th>
-                <th class="text-center" style="width:130px">Proyectos activos</th>
-                <th class="text-center" style="width:145px">Acciones pendientes</th>
-                <th class="text-center" style="width:90px">Estado</th>
+                <th class="sortable" data-col="nombre" style="cursor:pointer">
+                    Nombre <span class="sort-icon text-muted">↕</span>
+                </th>
+                <th>Descripción</th>
+                <th class="sortable text-center" data-col="proyectos" style="cursor:pointer;width:130px">
+                    Proyectos activos <span class="sort-icon text-muted">↕</span>
+                </th>
+                <th class="sortable text-center" data-col="acciones" style="cursor:pointer;width:145px">
+                    Acciones pendientes <span class="sort-icon text-muted">↕</span>
+                </th>
+                <th class="sortable text-center" data-col="estado" style="cursor:pointer;width:90px">
+                    Estado <span class="sort-icon text-muted">↕</span>
+                </th>
                 <th style="width:155px">Acciones</th>
             </tr>
         </thead>
@@ -69,7 +89,12 @@ $hayAreas     = !empty($areas);
         <?php foreach ($areas as $area):
             $tieneItems = $area['proyectos_activos'] > 0 || $area['acciones_pendientes'] > 0;
         ?>
-            <tr data-id="<?= $area['id'] ?>" data-estado="<?= htmlspecialchars($area['estado']) ?>">
+            <tr data-id="<?= $area['id'] ?>"
+                data-estado="<?= $area['estado'] ?>"
+                data-nombre="<?= htmlspecialchars($area['nombre'], ENT_QUOTES) ?>"
+                data-proyectos="<?= (int) $area['proyectos_activos'] ?>"
+                data-acciones="<?= (int) $area['acciones_pendientes'] ?>"
+                data-estado-val="<?= $area['estado'] ?>">
 
                 <td>
                     <input type="color"
@@ -86,6 +111,15 @@ $hayAreas     = !empty($areas);
                            data-id="<?= $area['id'] ?>"
                            value="<?= htmlspecialchars($area['nombre'], ENT_QUOTES) ?>"
                            maxlength="100">
+                </td>
+
+                <td>
+                    <input type="text"
+                           class="area-descripcion form-control form-control-sm border-0 bg-transparent p-0 text-muted"
+                           data-id="<?= $area['id'] ?>"
+                           value="<?= htmlspecialchars($area['descripcion'] ?? '', ENT_QUOTES) ?>"
+                           maxlength="300"
+                           placeholder="Sin descripción">
                 </td>
 
                 <td class="text-center">

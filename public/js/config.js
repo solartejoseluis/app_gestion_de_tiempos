@@ -171,9 +171,13 @@
     }
 
     function buildFila(area) {
-        var tr          = document.createElement('tr');
-        tr.dataset.id     = area.id;
-        tr.dataset.estado = 'activo';
+        var tr = document.createElement('tr');
+        tr.dataset.id        = area.id;
+        tr.dataset.estado    = 'activo';
+        tr.dataset.nombre    = area.nombre || '';
+        tr.dataset.proyectos = '0';
+        tr.dataset.acciones  = '0';
+        tr.dataset.estadoVal = 'activo';
         tr.innerHTML =
             '<td>' +
                 '<input type="color"' +
@@ -189,6 +193,14 @@
                        ' data-id="' + area.id + '"' +
                        ' value="' + escHTML(area.nombre) + '"' +
                        ' maxlength="100">' +
+            '</td>' +
+            '<td>' +
+                '<input type="text"' +
+                       ' class="area-descripcion form-control form-control-sm border-0 bg-transparent p-0 text-muted"' +
+                       ' data-id="' + area.id + '"' +
+                       ' value="' + escHTML(area.descripcion || '') + '"' +
+                       ' maxlength="300"' +
+                       ' placeholder="Sin descripción">' +
             '</td>' +
             '<td class="text-center">' +
                 '<span class="badge bg-secondary bg-opacity-50 text-secondary">0</span>' +
@@ -219,24 +231,46 @@
     if (areasTable) {
         areasTable.addEventListener('focusout', function (e) {
             var input = e.target.closest('.area-nombre');
-            if (!input) return;
-            var id    = input.dataset.id;
-            var valor = input.value.trim();
+            if (input) {
+                var id    = input.dataset.id;
+                var valor = input.value.trim();
 
-            clearTimeout(debounceTimers[id + '-nombre']);
-            debounceTimers[id + '-nombre'] = setTimeout(async function () {
-                limpiarErrorInline(input);
-                try {
-                    var data = await patchArea(id, { nombre: valor });
-                    if (data.ok) {
-                        mostrarAutosave();
-                    } else {
-                        errorInline(input, data.error || 'Error al guardar.');
+                clearTimeout(debounceTimers[id + '-nombre']);
+                debounceTimers[id + '-nombre'] = setTimeout(async function () {
+                    limpiarErrorInline(input);
+                    try {
+                        var data = await patchArea(id, { nombre: valor });
+                        if (data.ok) {
+                            mostrarAutosave();
+                        } else {
+                            errorInline(input, data.error || 'Error al guardar.');
+                        }
+                    } catch (_) {
+                        errorInline(input, 'Error de conexión.');
                     }
-                } catch (_) {
-                    errorInline(input, 'Error de conexión.');
-                }
-            }, 300);
+                }, 300);
+            }
+
+            var inputDesc = e.target.closest('.area-descripcion');
+            if (inputDesc) {
+                var id    = inputDesc.dataset.id;
+                var valor = inputDesc.value.trim();
+                clearTimeout(debounceTimers[id + '-desc']);
+                debounceTimers[id + '-desc'] = setTimeout(async function () {
+                    try {
+                        var res = await fetch('/config/areas/' + id, {
+                            method:  'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body:    JSON.stringify({ descripcion: valor }),
+                        });
+                        var data = await res.json();
+                        if (data.ok) mostrarAutosave();
+                        else mostrarToast(data.error || 'Error al guardar.');
+                    } catch (_) {
+                        mostrarToast('Error de conexión.');
+                    }
+                }, 300);
+            }
         });
 
         // ── Autoguardado — color ──────────────────────────────
@@ -295,18 +329,67 @@
                 if (row) row.querySelector('.area-nombre')?.select();
             }
         });
+
+        // Ordenamiento por columnas
+        var sortCol = 'nombre';
+        var sortDir = 'asc';
+
+        areasTable.addEventListener('click', function (e) {
+            var th = e.target.closest('th.sortable');
+            if (!th) return;
+            var col = th.dataset.col;
+            if (sortCol === col) {
+                sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortCol = col;
+                sortDir = 'asc';
+            }
+            areasTable.querySelectorAll('.sort-icon').forEach(function (s) {
+                s.textContent = '↕';
+                s.classList.remove('text-primary');
+                s.classList.add('text-muted');
+            });
+            th.querySelector('.sort-icon').textContent = sortDir === 'asc' ? '↑' : '↓';
+            th.querySelector('.sort-icon').classList.remove('text-muted');
+            th.querySelector('.sort-icon').classList.add('text-primary');
+
+            var tbody = areasTable.querySelector('tbody');
+            var filas = Array.from(tbody.querySelectorAll('tr'));
+            filas.sort(function (a, b) {
+                var va, vb;
+                if (col === 'nombre') {
+                    va = (a.dataset.nombre || '').toLowerCase();
+                    vb = (b.dataset.nombre || '').toLowerCase();
+                    return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+                } else if (col === 'proyectos') {
+                    va = parseInt(a.dataset.proyectos, 10) || 0;
+                    vb = parseInt(b.dataset.proyectos, 10) || 0;
+                } else if (col === 'acciones') {
+                    va = parseInt(a.dataset.acciones, 10) || 0;
+                    vb = parseInt(b.dataset.acciones, 10) || 0;
+                } else if (col === 'estado') {
+                    va = a.dataset.estadoVal || '';
+                    vb = b.dataset.estadoVal || '';
+                    return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+                }
+                return sortDir === 'asc' ? va - vb : vb - va;
+            });
+            filas.forEach(function (fila) { tbody.appendChild(fila); });
+        });
     }
 
     // ── Crear área ────────────────────────────────────────────
     if (formCrear) {
         var inputNombreNueva = document.getElementById('area-nombre-nueva');
+        var inputDescNueva   = document.getElementById('area-descripcion-nueva');
         var inputColorNueva  = document.getElementById('area-color-nueva');
         var errorCrear       = document.getElementById('area-crear-error');
 
         formCrear.addEventListener('submit', async function (e) {
             e.preventDefault();
-            var nombre = inputNombreNueva.value.trim();
-            var color  = inputColorNueva.value;
+            var nombre      = inputNombreNueva.value.trim();
+            var descripcion = inputDescNueva ? inputDescNueva.value.trim() : '';
+            var color       = inputColorNueva.value;
 
             if (!nombre) {
                 if (errorCrear) {
@@ -324,7 +407,7 @@
                 var res  = await fetch('/config/areas', {
                     method:  'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body:    new URLSearchParams({ nombre: nombre, color: color }),
+                    body:    new URLSearchParams({ nombre: nombre, descripcion: descripcion, color: color }),
                 });
                 var data = await res.json();
 

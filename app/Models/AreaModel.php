@@ -9,7 +9,7 @@ class AreaModel extends Model
     {
         $sql = "
             SELECT
-                a.id, a.nombre, a.color, a.estado, a.created_at,
+                a.id, a.nombre, a.descripcion, a.color, a.estado, a.created_at,
                 COUNT(DISTINCT p.id) AS proyectos_activos,
                 COUNT(DISTINCT i.id) AS acciones_pendientes
             FROM areas a
@@ -23,7 +23,7 @@ class AreaModel extends Model
                   AND i.tipo IN ('accion', 'proyecto_accion')
             WHERE a.usuario_id  = ?
               AND a.deleted_at IS NULL
-            GROUP BY a.id, a.nombre, a.color, a.estado, a.created_at
+            GROUP BY a.id, a.nombre, a.descripcion, a.color, a.estado, a.created_at
             ORDER BY
                 CASE WHEN a.estado = 'activo' THEN 0 ELSE 1 END ASC,
                 a.nombre ASC

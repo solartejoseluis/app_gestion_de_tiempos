@@ -70,8 +70,9 @@ class ConfigController extends Controller
     {
         $this->requireAuth();
         $uid    = (int) $_SESSION['usuario_id'];
-        $nombre = trim($this->input('nombre', ''));
-        $color  = trim($this->input('color', '#4a90d9'));
+        $nombre      = trim($this->input('nombre', ''));
+        $color       = trim($this->input('color', '#4a90d9'));
+        $descripcion = trim($this->input('descripcion', ''));
 
         if ($nombre === '') {
             $this->error('El nombre del área es obligatorio.');
@@ -89,13 +90,14 @@ class ConfigController extends Controller
 
         $areaModel = new AreaModel();
         $id        = $areaModel->crear([
-            'usuario_id' => $uid,
-            'nombre'     => $nombre,
-            'color'      => $color,
-            'estado'     => 'activo',
+            'usuario_id'  => $uid,
+            'nombre'      => $nombre,
+            'descripcion' => $descripcion ?: null,
+            'color'       => $color,
+            'estado'      => 'activo',
         ]);
 
-        $this->json(['id' => $id, 'nombre' => $nombre, 'color' => $color]);
+        $this->json(['id' => $id, 'nombre' => $nombre, 'descripcion' => $descripcion ?: null, 'color' => $color]);
     }
 
     public function editarArea(string $id): void
@@ -128,6 +130,9 @@ class ConfigController extends Controller
         }
         if (isset($body['estado']) && in_array($body['estado'], ['activo', 'archivado'], true)) {
             $campos['estado'] = $body['estado'];
+        }
+        if (isset($body['descripcion'])) {
+            $campos['descripcion'] = trim($body['descripcion']) ?: null;
         }
 
         if (!empty($campos)) {
