@@ -30,6 +30,12 @@
 
             ['href' => '/completadas','icon' => 'bi-check-all',      'label' => 'Completadas',
              'badge_class' => null, 'count' => 0],
+
+            ['href' => '/agenda',    'icon' => 'bi-calendar-week', 'label' => 'Agenda',
+             'badge_class' => null, 'count' => 0],
+
+            ['href' => '/plantilla', 'icon' => 'bi-layout-wtf',    'label' => 'Plantilla',
+             'badge_class' => null, 'count' => 0],
         ];
         ?>
 

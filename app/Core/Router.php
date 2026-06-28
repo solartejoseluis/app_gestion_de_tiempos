@@ -141,6 +141,17 @@ class Router
         $this->post('/revision/paso/{paso}/completar', 'RevisionController', 'completarPaso');
         $this->post('/revision/completar',             'RevisionController', 'completarRevision');
 
+        // Plantilla semanal
+        $this->get('/plantilla',                    'PlantillaController', 'index');
+        $this->post('/plantilla',                   'PlantillaController', 'crear');
+        $this->patch('/plantilla/{id}',             'PlantillaController', 'editar');
+        $this->post('/plantilla/{id}/archivar',     'PlantillaController', 'archivar');
+        $this->post('/plantilla/{id}/restaurar',    'PlantillaController', 'restaurar');
+        $this->delete('/plantilla/{id}',            'PlantillaController', 'eliminar');
+
+        // Agenda
+        $this->get('/agenda',                       'AgendaController', 'index');
+
         // Configuración
         $this->get('/config/exportar',                 'ConfigController', 'exportar');
         $this->get('/config',                          'ConfigController', 'index');
