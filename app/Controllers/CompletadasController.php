@@ -49,4 +49,111 @@ class CompletadasController extends Controller
             'vista'        => $vista,
         ]);
     }
+
+    public function recuperarItem(string $id): void
+    {
+        $this->requireAuth();
+        $id  = (int) $id;
+        $uid = (int) $_SESSION['usuario_id'];
+        $db  = Database::connection();
+
+        $stmt = $db->prepare(
+            'SELECT id, proyecto_id FROM items
+              WHERE id = ? AND usuario_id = ? AND deleted_at IS NULL LIMIT 1'
+        );
+        $stmt->execute([$id, $uid]);
+        $item = $stmt->fetch();
+        if (!$item) {
+            $this->error('No autorizado.', 403);
+        }
+
+        $tipo = $item['proyecto_id'] ? 'proyecto_accion' : 'accion';
+
+        $db->prepare(
+            'UPDATE items SET tipo = ?, fecha_completada = NULL WHERE id = ?'
+        )->execute([$tipo, $id]);
+
+        $this->json(null);
+    }
+
+    public function eliminarItem(string $id): void
+    {
+        $this->requireAuth();
+        $id  = (int) $id;
+        $uid = (int) $_SESSION['usuario_id'];
+        $db  = Database::connection();
+
+        $stmt = $db->prepare(
+            'SELECT id FROM items
+              WHERE id = ? AND usuario_id = ? AND deleted_at IS NULL LIMIT 1'
+        );
+        $stmt->execute([$id, $uid]);
+        if (!$stmt->fetch()) {
+            $this->error('No autorizado.', 403);
+        }
+
+        $db->prepare(
+            'UPDATE items SET deleted_at = NOW() WHERE id = ?'
+        )->execute([$id]);
+
+        $this->json(null);
+    }
+
+    public function recuperarProyecto(string $id): void
+    {
+        $this->requireAuth();
+        $id  = (int) $id;
+        $uid = (int) $_SESSION['usuario_id'];
+        $db  = Database::connection();
+
+        $stmt = $db->prepare(
+            'SELECT id FROM proyectos
+              WHERE id = ? AND usuario_id = ? AND deleted_at IS NULL LIMIT 1'
+        );
+        $stmt->execute([$id, $uid]);
+        if (!$stmt->fetch()) {
+            $this->error('No autorizado.', 403);
+        }
+
+        $db->prepare(
+            "UPDATE proyectos SET estado = 'activo' WHERE id = ?"
+        )->execute([$id]);
+
+        $this->json(null);
+    }
+
+    public function eliminarProyecto(string $id): void
+    {
+        $this->requireAuth();
+        $id  = (int) $id;
+        $uid = (int) $_SESSION['usuario_id'];
+        $db  = Database::connection();
+
+        $stmt = $db->prepare(
+            'SELECT id FROM proyectos
+              WHERE id = ? AND usuario_id = ? AND deleted_at IS NULL LIMIT 1'
+        );
+        $stmt->execute([$id, $uid]);
+        if (!$stmt->fetch()) {
+            $this->error('No autorizado.', 403);
+        }
+
+        $db->beginTransaction();
+        try {
+            $db->prepare(
+                'UPDATE items SET deleted_at = NOW()
+                  WHERE proyecto_id = ? AND deleted_at IS NULL'
+            )->execute([$id]);
+            $db->prepare(
+                'UPDATE proyectos SET deleted_at = NOW()
+                  WHERE id = ? AND usuario_id = ?'
+            )->execute([$id, $uid]);
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            $this->error('Error al eliminar el proyecto.');
+        }
+
+        $this->json(null);
+    }
 }

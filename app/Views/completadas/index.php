@@ -210,6 +210,18 @@ $filtrosActuales = array_filter([
                                         <?php endif; ?>
                                     </div>
                                 </div>
+                                <div class="d-flex gap-1 ms-auto flex-shrink-0 align-items-center">
+                                    <button class="btn btn-sm btn-outline-secondary btn-recuperar-item"
+                                            data-id="<?= $it['id'] ?>"
+                                            title="Recuperar acción">
+                                        <i class="bi bi-arrow-counterclockwise"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger btn-eliminar-item"
+                                            data-id="<?= $it['id'] ?>"
+                                            title="Eliminar permanentemente">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -263,9 +275,23 @@ $filtrosActuales = array_filter([
                                             </span>
                                         </div>
                                     </div>
-                                    <span class="text-muted small text-nowrap">
-                                        <?= $fmtFechaCorta($pr['updated_at']) ?>
-                                    </span>
+                                    <div class="d-flex align-items-start gap-2 flex-shrink-0">
+                                        <span class="text-muted small text-nowrap">
+                                            <?= $fmtFechaCorta($pr['updated_at']) ?>
+                                        </span>
+                                        <div class="d-flex gap-1">
+                                            <button class="btn btn-sm btn-outline-secondary btn-recuperar-proyecto"
+                                                    data-id="<?= $pr['id'] ?>"
+                                                    title="Reabrir proyecto">
+                                                <i class="bi bi-arrow-counterclockwise"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger btn-eliminar-proyecto"
+                                                    data-id="<?= $pr['id'] ?>"
+                                                    title="Eliminar proyecto permanentemente">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -292,3 +318,157 @@ $filtrosActuales = array_filter([
     <?php endif; ?>
 
 </div>
+
+<!-- Modal de confirmación ──────────────────────────── -->
+<div class="modal fade" id="modalConfirmarEliminar" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-1">
+                <h6 class="modal-title fw-semibold">¿Eliminar permanentemente?</h6>
+                <button type="button" class="btn-close btn-sm"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <p class="text-muted small mb-0" id="modal-eliminar-texto">
+                    Esta acción no se puede deshacer.
+                </p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-sm btn-danger"
+                        id="btn-confirmar-eliminar">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    var modalEl   = document.getElementById('modalConfirmarEliminar');
+    var btnConf   = document.getElementById('btn-confirmar-eliminar');
+    var textoEl   = document.getElementById('modal-eliminar-texto');
+    var pendingFn = null;
+
+    function confirmarEliminar(texto, fn) {
+        if (textoEl) textoEl.textContent = texto;
+        pendingFn = fn;
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+
+    if (btnConf) {
+        btnConf.addEventListener('click', function () {
+            bootstrap.Modal.getInstance(modalEl)?.hide();
+            if (pendingFn) { pendingFn(); pendingFn = null; }
+        });
+        if (modalEl) {
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                pendingFn = null;
+            });
+        }
+    }
+
+    function fetchPost(url, method) {
+        return fetch(url, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body:    method === 'DELETE' ? '_method=DELETE' : '',
+        }).then(function (r) { return r.json(); });
+    }
+
+    function fadeRemove(el) {
+        el.style.transition = 'opacity .3s';
+        el.style.opacity    = '0';
+        setTimeout(function () { el.remove(); }, 320);
+    }
+
+    // ── Recuperar ítem ───────────────────────────────
+    document.querySelectorAll('.btn-recuperar-item').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var id = btn.dataset.id;
+            btn.disabled = true;
+            fetchPost('/completadas/items/' + id + '/recuperar')
+            .then(function (data) {
+                if (data.ok) {
+                    var row = btn.closest('.list-group-item');
+                    if (row) { fadeRemove(row); } else { window.location.reload(); }
+                } else {
+                    alert(data.error || 'Error.');
+                    btn.disabled = false;
+                }
+            })
+            .catch(function () { alert('Error de conexión.'); btn.disabled = false; });
+        });
+    });
+
+    // ── Eliminar ítem ────────────────────────────────
+    document.querySelectorAll('.btn-eliminar-item').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var id = btn.dataset.id;
+            confirmarEliminar(
+                'Se eliminará esta acción permanentemente. ¿Continuar?',
+                function () {
+                    btn.disabled = true;
+                    fetchPost('/completadas/items/' + id, 'DELETE')
+                    .then(function (data) {
+                        if (data.ok) {
+                            var row = btn.closest('.list-group-item');
+                            if (row) { fadeRemove(row); } else { window.location.reload(); }
+                        } else {
+                            alert(data.error || 'Error.');
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(function () { alert('Error de conexión.'); btn.disabled = false; });
+                }
+            );
+        });
+    });
+
+    // ── Recuperar proyecto ───────────────────────────
+    document.querySelectorAll('.btn-recuperar-proyecto').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var id = btn.dataset.id;
+            btn.disabled = true;
+            fetchPost('/completadas/proyectos/' + id + '/recuperar')
+            .then(function (data) {
+                if (data.ok) {
+                    var card = btn.closest('.card');
+                    if (card) { fadeRemove(card); } else { window.location.reload(); }
+                } else {
+                    alert(data.error || 'Error.');
+                    btn.disabled = false;
+                }
+            })
+            .catch(function () { alert('Error de conexión.'); btn.disabled = false; });
+        });
+    });
+
+    // ── Eliminar proyecto ────────────────────────────
+    document.querySelectorAll('.btn-eliminar-proyecto').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var id = btn.dataset.id;
+            confirmarEliminar(
+                'Se eliminará el proyecto y todas sus tareas permanentemente. ¿Continuar?',
+                function () {
+                    btn.disabled = true;
+                    fetchPost('/completadas/proyectos/' + id, 'DELETE')
+                    .then(function (data) {
+                        if (data.ok) {
+                            var card = btn.closest('.card');
+                            if (card) { fadeRemove(card); } else { window.location.reload(); }
+                        } else {
+                            alert(data.error || 'Error.');
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(function () { alert('Error de conexión.'); btn.disabled = false; });
+                }
+            );
+        });
+    });
+
+}());
+</script>

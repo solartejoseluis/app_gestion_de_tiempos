@@ -131,7 +131,11 @@ class Router
         $this->post('/referencia/activar',          'ReferenciaController', 'activar');
 
         // Completadas
-        $this->get('/completadas',         'CompletadasController', 'index');
+        $this->post('/completadas/items/{id}/recuperar',     'CompletadasController', 'recuperarItem');
+        $this->delete('/completadas/items/{id}',             'CompletadasController', 'eliminarItem');
+        $this->post('/completadas/proyectos/{id}/recuperar', 'CompletadasController', 'recuperarProyecto');
+        $this->delete('/completadas/proyectos/{id}',         'CompletadasController', 'eliminarProyecto');
+        $this->get('/completadas',                           'CompletadasController', 'index');
 
         // Revisión semanal
         $this->get('/revision',                        'RevisionController', 'index');
