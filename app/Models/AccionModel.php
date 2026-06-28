@@ -31,7 +31,8 @@ class AccionModel extends Model
             SELECT
                 i.id, i.titulo, i.notas, i.tipo,
                 i.area_id, i.contexto_id, i.proyecto_id,
-                i.fecha_accion, i.fecha_cita, i.tipo_tiempo, i.created_at,
+                i.fecha_accion, i.hora_inicio, i.hora_fin,
+                i.fecha_cita, i.tipo_tiempo, i.created_at,
                 a.nombre AS area_nombre,
                 a.color  AS area_color,
                 c.nombre AS contexto_nombre,

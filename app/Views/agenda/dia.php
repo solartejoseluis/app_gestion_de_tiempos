@@ -135,6 +135,10 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
                  data-titulo="<?= htmlspecialchars($item['titulo'], ENT_QUOTES) ?>"
                  data-hora-ini="<?= $horaIni ?>"
                  data-hora-fin="<?= $horaFin ?>"
+                 data-area-id="<?= $item['area_id'] ?? '' ?>"
+                 data-contexto-id="<?= $item['contexto_id'] ?? '' ?>"
+                 data-proyecto-id="<?= $item['proyecto_id'] ?? '' ?>"
+                 data-fecha="<?= $item['fecha_accion'] ?? '' ?>"
                  style="top:<?= $top ?>px;height:<?= $height ?>px">
                 <div class="agenda-evento-hora">
                     <?= $horaIni ?> – <?= $horaFin ?>
@@ -300,47 +304,6 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
             </div>
         </div>
 
-        <!-- Panel de edición -->
-        <div id="det-dia-edit" style="display:none">
-            <div style="margin-bottom:12px">
-                <label style="font-size:.75rem;color:#6b7280;
-                              display:block;margin-bottom:4px">Título *</label>
-                <input id="det-dia-edit-titulo" type="text"
-                       class="form-control form-control-sm"
-                       maxlength="255">
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;
-                        gap:8px;margin-bottom:12px">
-                <div>
-                    <label style="font-size:.75rem;color:#6b7280;
-                                  display:block;margin-bottom:4px">
-                        Hora inicio
-                    </label>
-                    <input id="det-dia-edit-hora-ini" type="time"
-                           class="form-control form-control-sm">
-                </div>
-                <div>
-                    <label style="font-size:.75rem;color:#6b7280;
-                                  display:block;margin-bottom:4px">
-                        Hora fin
-                    </label>
-                    <input id="det-dia-edit-hora-fin" type="time"
-                           class="form-control form-control-sm">
-                </div>
-            </div>
-            <div id="det-dia-edit-error"
-                 class="text-danger small d-none mb-2"></div>
-            <div style="display:flex;gap:8px">
-                <button id="det-dia-btn-guardar" class="btn btn-sm btn-primary">
-                    Guardar
-                </button>
-                <button id="det-dia-btn-cancelar-edit"
-                        class="btn btn-sm btn-outline-secondary">
-                    Cancelar
-                </button>
-            </div>
-        </div>
-
     </div>
 </div>
 
@@ -446,10 +409,6 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
             document.getElementById('det-dia-hora').textContent =
                 (el.querySelector('.agenda-evento-hora') || {}).textContent?.trim() || '';
             document.getElementById('det-dia-btn-completar').dataset.itemId = el.dataset.id;
-            var deE = document.getElementById('det-dia-edit');
-            var deV = document.getElementById('det-dia-vista');
-            if (deE) deE.style.display  = 'none';
-            if (deV) deV.style.display  = 'block';
             if (modalDet) modalDet.style.display = 'block';
         });
     });
@@ -481,110 +440,55 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
         });
     }
 
-    // ── Botón Editar ─────────────────────────────────
-    var diaEditItemId = null;
-    var diaBtnEditar  = document.getElementById('det-dia-btn-editar');
-    var diaVista      = document.getElementById('det-dia-vista');
-    var diaEdit       = document.getElementById('det-dia-edit');
-    var diaEditTit    = document.getElementById('det-dia-edit-titulo');
-    var diaEditHIni   = document.getElementById('det-dia-edit-hora-ini');
-    var diaEditHFin   = document.getElementById('det-dia-edit-hora-fin');
-    var diaEditErr    = document.getElementById('det-dia-edit-error');
-    var diaBtnGuard   = document.getElementById('det-dia-btn-guardar');
-    var diaBtnCancel  = document.getElementById('det-dia-btn-cancelar-edit');
-
+    // ── Botón Editar → modal global ──────────────────────────
+    var diaBtnEditar = document.getElementById('det-dia-btn-editar');
     if (diaBtnEditar) {
         diaBtnEditar.addEventListener('click', function () {
-            var ev = document.querySelector(
-                '.agenda-evento[data-id="' +
-                document.getElementById('det-dia-btn-completar').dataset.itemId + '"]');
-            diaEditItemId = ev ? ev.dataset.id : null;
-            if (diaEditTit)  diaEditTit.value  = ev ? (ev.dataset.titulo  || '') : '';
-            if (diaEditHIni) diaEditHIni.value = ev ? (ev.dataset.horaIni || '') : '';
-            if (diaEditHFin) diaEditHFin.value = ev ? (ev.dataset.horaFin || '') : '';
-            if (diaEditErr)  diaEditErr.classList.add('d-none');
-            if (diaVista)    diaVista.style.display = 'none';
-            if (diaEdit)     diaEdit.style.display  = 'block';
-        });
-    }
-
-    if (diaBtnCancel) {
-        diaBtnCancel.addEventListener('click', function () {
-            if (diaEdit)  diaEdit.style.display  = 'none';
-            if (diaVista) diaVista.style.display = 'block';
-        });
-    }
-
-    if (diaBtnGuard) {
-        diaBtnGuard.addEventListener('click', function () {
-            if (!diaEditItemId) return;
-            var titulo  = diaEditTit  ? diaEditTit.value.trim()  : '';
-            var horaIni = diaEditHIni ? diaEditHIni.value        : '';
-            var horaFin = diaEditHFin ? diaEditHFin.value        : '';
-            if (!titulo) {
-                if (diaEditErr) {
-                    diaEditErr.textContent = 'El título es obligatorio.';
-                    diaEditErr.classList.remove('d-none');
-                }
-                return;
+            var id = document.getElementById('det-dia-btn-completar').dataset.itemId;
+            var ev = document.querySelector('.agenda-evento[data-id="' + id + '"]');
+            document.getElementById('modal-evento-detalle-dia').style.display = 'none';
+            if (ev && window.abrirModalEditar) {
+                window.abrirModalEditar({
+                    id:         ev.dataset.id,
+                    titulo:     ev.dataset.titulo     || '',
+                    areaId:     ev.dataset.areaId     || '',
+                    contextoId: ev.dataset.contextoId || '',
+                    proyectoId: ev.dataset.proyectoId || '',
+                    fecha:      ev.dataset.fecha      || '',
+                    horaInicio: ev.dataset.horaIni    || '',
+                    horaFin:    ev.dataset.horaFin    || '',
+                });
             }
-            diaBtnGuard.disabled = true;
-            fetch('/acciones/' + encodeURIComponent(diaEditItemId), {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({
-                    _method:     'PATCH',
-                    titulo:      titulo,
-                    hora_inicio: horaIni,
-                    hora_fin:    horaFin,
-                }),
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (data.ok) {
-                    var ev = document.querySelector(
-                        '.agenda-evento[data-id="' + diaEditItemId + '"]');
-                    if (ev) {
-                        var tEl = ev.querySelector('.agenda-evento-titulo');
-                        var hEl = ev.querySelector('.agenda-evento-hora');
-                        if (tEl) tEl.textContent = titulo;
-                        if (hEl && horaIni)
-                            hEl.textContent = horaIni + (horaFin ? ' – ' + horaFin : '');
-                        ev.dataset.titulo  = titulo;
-                        ev.dataset.horaIni = horaIni;
-                        ev.dataset.horaFin = horaFin;
-                        if (horaIni) {
-                            var horaBase = 5, pxSlot = 48;
-                            function horaPx(h) {
-                                var p = h.split(':');
-                                return ((parseInt(p[0]) - horaBase) * 60 + parseInt(p[1])) / 30 * pxSlot;
-                            }
-                            var newTop    = horaPx(horaIni);
-                            var newBottom = horaFin ? horaPx(horaFin) : newTop + pxSlot;
-                            ev.style.top    = newTop + 'px';
-                            ev.style.height = Math.max(newBottom - newTop, pxSlot) + 'px';
-                        }
-                    }
-                    document.getElementById('modal-evento-detalle-dia').style.display = 'none';
-                    if (diaEdit)  diaEdit.style.display  = 'none';
-                    if (diaVista) diaVista.style.display = 'block';
-                } else {
-                    if (diaEditErr) {
-                        diaEditErr.textContent = data.error || 'Error al guardar.';
-                        diaEditErr.classList.remove('d-none');
-                    }
-                }
-                diaBtnGuard.disabled = false;
-            })
-            .catch(function () {
-                if (diaEditErr) {
-                    diaEditErr.textContent = 'Error de conexión.';
-                    diaEditErr.classList.remove('d-none');
-                }
-                diaBtnGuard.disabled = false;
-            });
         });
     }
+
+    // ── Actualizar DOM del grid tras edición ─────────────────
+    document.addEventListener('accion:editada', function (e) {
+        var d  = e.detail;
+        var ev = document.querySelector('.agenda-evento[data-id="' + d.id + '"]');
+        if (!ev) return;
+        var tEl = ev.querySelector('.agenda-evento-titulo');
+        var hEl = ev.querySelector('.agenda-evento-hora');
+        if (tEl) tEl.textContent = d.titulo;
+        if (hEl && d.horaInicio) hEl.textContent = d.horaInicio + (d.horaFin ? ' – ' + d.horaFin : '');
+        ev.dataset.titulo     = d.titulo;
+        ev.dataset.areaId     = d.areaId     || '';
+        ev.dataset.contextoId = d.contextoId || '';
+        ev.dataset.proyectoId = d.proyectoId || '';
+        ev.dataset.fecha      = d.fecha      || '';
+        ev.dataset.horaIni    = d.horaInicio || '';
+        ev.dataset.horaFin    = d.horaFin    || '';
+        if (d.horaInicio) {
+            var horaPx = function (h) {
+                var p = h.split(':');
+                return ((parseInt(p[0], 10) - 5) * 60 + parseInt(p[1], 10)) / 30 * 48;
+            };
+            var newTop    = horaPx(d.horaInicio);
+            var newBottom = d.horaFin ? horaPx(d.horaFin) : newTop + 48;
+            ev.style.top    = newTop + 'px';
+            ev.style.height = Math.max(newBottom - newTop, 48) + 'px';
+        }
+    });
 
 }());
 </script>

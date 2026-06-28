@@ -84,9 +84,19 @@ class AccionesController extends Controller
             $params[] = $titulo;
         }
 
+        if (array_key_exists('area_id', $body)) {
+            $sets[]   = 'area_id = ?';
+            $params[] = (int) ($body['area_id'] ?? 0) ?: null;
+        }
+
         if (array_key_exists('contexto_id', $body)) {
             $sets[]   = 'contexto_id = ?';
             $params[] = (int) ($body['contexto_id'] ?? 0) ?: null;
+        }
+
+        if (array_key_exists('proyecto_id', $body)) {
+            $sets[]   = 'proyecto_id = ?';
+            $params[] = (int) ($body['proyecto_id'] ?? 0) ?: null;
         }
 
         if (array_key_exists('fecha_accion', $body)) {

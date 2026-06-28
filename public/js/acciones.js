@@ -124,88 +124,36 @@
     });
 
     // ── Editar acción ─────────────────────────────────────────
-    let editItemId    = null;
-    const modalEditEl = document.getElementById('modalEditarAccion');
-
-    lista.addEventListener('click', (e) => {
-        const btn = e.target.closest('.btn-edit');
-        if (!btn) return;
-
-        editItemId = btn.dataset.itemId;
-
-        const elTitulo   = document.getElementById('edit-titulo');
-        const elContexto = document.getElementById('edit-contexto');
-        const elFecha    = document.getElementById('edit-fecha');
-        const elError    = document.getElementById('edit-error');
-
-        if (elTitulo)   elTitulo.value   = btn.dataset.titulo      ?? '';
-        if (elContexto) elContexto.value = btn.dataset.contextoId  ?? '';
-        if (elFecha)    elFecha.value    = btn.dataset.fechaAccion  ?? '';
-        if (elError)    elError.classList.add('d-none');
-
-        bootstrap.Modal.getOrCreateInstance(modalEditEl).show();
+    lista.addEventListener('click', function (e) {
+        var btn = e.target.closest('.btn-edit');
+        if (!btn || !window.abrirModalEditar) return;
+        window.abrirModalEditar({
+            id:         btn.dataset.itemId,
+            titulo:     btn.dataset.titulo      || '',
+            areaId:     btn.dataset.areaId      || '',
+            contextoId: btn.dataset.contextoId  || '',
+            proyectoId: btn.dataset.proyectoId  || '',
+            fecha:      btn.dataset.fecha        || '',
+            horaInicio: btn.dataset.horaInicio   || '',
+            horaFin:    btn.dataset.horaFin      || '',
+        });
     });
 
-    document.getElementById('btn-guardar-editar')?.addEventListener('click', async () => {
-        const btnEl  = document.getElementById('btn-guardar-editar');
-        const titulo = document.getElementById('edit-titulo')?.value.trim() ?? '';
-
-        if (!titulo) {
-            const elErr = document.getElementById('edit-error');
-            if (elErr) { elErr.textContent = 'El título es obligatorio.'; elErr.classList.remove('d-none'); }
-            return;
-        }
-
-        const contextoId = document.getElementById('edit-contexto')?.value ?? '';
-        const fecha      = document.getElementById('edit-fecha')?.value     ?? '';
-        const textoOrig  = btnEl.textContent.trim();
-        btnEl.disabled    = true;
-        btnEl.textContent = 'Guardando...';
-
-        try {
-            const res = await fetch(`/acciones/${editItemId}`, {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body:    new URLSearchParams({
-                    titulo,
-                    contexto_id:  contextoId,
-                    fecha_accion: fecha,
-                    _method:      'PATCH',
-                }),
-            });
-            const data = await res.json();
-
-            if (data.ok) {
-                // Actualizar el DOM antes de cerrar el modal para evitar que
-                // una excepción en hide() bloquee la actualización
-                const fila = lista.querySelector(`.acciones-item[data-id="${editItemId}"]`);
-                if (fila) {
-                    const textoEl = fila.querySelector('.item-text');
-                    if (textoEl) textoEl.textContent = titulo;
-
-                    // Sincronizar data attributes del botón para la próxima edición
-                    const btnEdit = fila.querySelector('.btn-edit');
-                    if (btnEdit) {
-                        btnEdit.dataset.titulo      = titulo;
-                        btnEdit.dataset.contextoId  = contextoId;
-                        btnEdit.dataset.fechaAccion = fecha;
-                    }
-                }
-
-                btnEl.disabled    = false;
-                btnEl.textContent = textoOrig;
-                bootstrap.Modal.getOrCreateInstance(modalEditEl).hide();
-            } else {
-                const elErr = document.getElementById('edit-error');
-                if (elErr) { elErr.textContent = data.error ?? 'Error al guardar.'; elErr.classList.remove('d-none'); }
-                btnEl.disabled    = false;
-                btnEl.textContent = textoOrig;
-            }
-        } catch {
-            const elErr = document.getElementById('edit-error');
-            if (elErr) { elErr.textContent = 'Error de conexión.'; elErr.classList.remove('d-none'); }
-            btnEl.disabled    = false;
-            btnEl.textContent = textoOrig;
+    document.addEventListener('accion:editada', function (e) {
+        var d    = e.detail;
+        var fila = lista.querySelector('.acciones-item[data-id="' + d.id + '"]');
+        if (!fila) return;
+        var textoEl = fila.querySelector('.item-text');
+        if (textoEl) textoEl.textContent = d.titulo;
+        var btnEdit = fila.querySelector('.btn-edit');
+        if (btnEdit) {
+            btnEdit.dataset.titulo      = d.titulo;
+            btnEdit.dataset.areaId      = d.areaId      || '';
+            btnEdit.dataset.contextoId  = d.contextoId  || '';
+            btnEdit.dataset.proyectoId  = d.proyectoId  || '';
+            btnEdit.dataset.fecha       = d.fecha        || '';
+            btnEdit.dataset.horaInicio  = d.horaInicio   || '';
+            btnEdit.dataset.horaFin     = d.horaFin      || '';
         }
     });
 

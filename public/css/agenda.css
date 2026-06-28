@@ -264,22 +264,78 @@
 
 /* ── Responsive móvil ── */
 @media (max-width: 768px) {
-    .agenda-header {
-        grid-template-columns: 40px repeat(7, 1fr);
+    /* ── Agenda responsive ────────────────────────────── */
+    .agenda-wrapper {
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
     }
-    .agenda-allday {
-        grid-template-columns: 40px repeat(7, 1fr);
+
+    .agenda-nav {
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 8px 10px;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: #fff;
     }
-    .agenda-grid {
-        grid-template-columns: 40px repeat(7, 1fr);
+
+    .agenda-nav-title {
+        width: 100%;
+        font-size: .85rem;
+        min-width: unset;
+        order: -1;
     }
-    .agenda-header-dia .dia-nombre {
+
+    .agenda-header-outer {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .agenda-header-outer::-webkit-scrollbar {
         display: none;
     }
+
+    .agenda-header {
+        min-width: 560px;
+    }
+
+    .agenda-allday {
+        min-width: 560px;
+    }
+
+    .agenda-scroll {
+        overflow-x: auto;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        max-height: calc(100vh - 120px);
+    }
+
+    .agenda-grid {
+        min-width: 560px;
+    }
+
+    .agenda-header-dia .dia-nombre {
+        font-size: .65rem;
+    }
+
     .agenda-header-dia .dia-num {
         font-size: .9rem;
     }
-    .agenda-evento-titulo {
+
+    .agenda-evento {
         font-size: .65rem;
+        padding: 2px 3px;
+    }
+
+    .agenda-evento-hora {
+        font-size: .6rem;
+    }
+
+    .agenda-bloque {
+        font-size: .62rem;
+        padding: 2px 3px;
     }
 }

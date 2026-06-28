@@ -48,7 +48,9 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
     </a>
   </div>
 
-  <!-- ── Cabecera de días ────────────────────────── -->
+  <!-- ── Cabecera de días + todo el día (con scroll horizontal en móvil) ── -->
+  <div class="agenda-header-outer">
+
   <div class="agenda-header">
     <div class="agenda-header-hora"></div>
     <?php for ($d = 0; $d < 7; $d++):
@@ -87,6 +89,8 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
     </div>
     <?php endfor; ?>
   </div>
+
+  </div><!-- /.agenda-header-outer -->
 
   <!-- ── Grid scrolleable ────────────────────────── -->
   <div class="agenda-scroll" id="agenda-scroll">
@@ -167,6 +171,10 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
                  data-titulo="<?= htmlspecialchars($item['titulo'], ENT_QUOTES) ?>"
                  data-hora-ini="<?= $horaIni ?>"
                  data-hora-fin="<?= $horaFin ?>"
+                 data-area-id="<?= $item['area_id'] ?? '' ?>"
+                 data-contexto-id="<?= $item['contexto_id'] ?? '' ?>"
+                 data-proyecto-id="<?= $item['proyecto_id'] ?? '' ?>"
+                 data-fecha="<?= $item['fecha_accion'] ?? '' ?>"
                  style="top:<?= $top ?>px;height:<?= $height ?>px"
                  title="<?= htmlspecialchars($item['titulo']) ?>">
                 <div class="agenda-evento-hora">
@@ -333,47 +341,6 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
             </div>
         </div>
 
-        <!-- Panel de edición -->
-        <div id="det-edit" style="display:none">
-            <div style="margin-bottom:12px">
-                <label style="font-size:.75rem;color:#6b7280;
-                              display:block;margin-bottom:4px">Título *</label>
-                <input id="det-edit-titulo" type="text"
-                       class="form-control form-control-sm"
-                       maxlength="255">
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;
-                        gap:8px;margin-bottom:12px">
-                <div>
-                    <label style="font-size:.75rem;color:#6b7280;
-                                  display:block;margin-bottom:4px">
-                        Hora inicio
-                    </label>
-                    <input id="det-edit-hora-ini" type="time"
-                           class="form-control form-control-sm">
-                </div>
-                <div>
-                    <label style="font-size:.75rem;color:#6b7280;
-                                  display:block;margin-bottom:4px">
-                        Hora fin
-                    </label>
-                    <input id="det-edit-hora-fin" type="time"
-                           class="form-control form-control-sm">
-                </div>
-            </div>
-            <div id="det-edit-error"
-                 class="text-danger small d-none mb-2"></div>
-            <div style="display:flex;gap:8px">
-                <button id="det-btn-guardar" class="btn btn-sm btn-primary">
-                    Guardar
-                </button>
-                <button id="det-btn-cancelar-edit"
-                        class="btn btn-sm btn-outline-secondary">
-                    Cancelar
-                </button>
-            </div>
-        </div>
-
     </div>
 </div>
 
@@ -479,10 +446,6 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('det-hora').textContent =
                 (el.querySelector('.agenda-evento-hora') || {}).textContent?.trim() || '';
             document.getElementById('det-btn-completar').dataset.itemId = el.dataset.id;
-            var deE = document.getElementById('det-edit');
-            var deV = document.getElementById('det-vista');
-            if (deE) deE.style.display  = 'none';
-            if (deV) deV.style.display  = 'block';
             if (modalDet) modalDet.style.display = 'block';
         });
     });
@@ -518,109 +481,54 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // ── Botón Editar ──────────────────────────────────────────
+    // ── Botón Editar → modal global ──────────────────────────
     var detBtnEditar = document.getElementById('det-btn-editar');
-    var detVista     = document.getElementById('det-vista');
-    var detEdit      = document.getElementById('det-edit');
-    var detEditTit   = document.getElementById('det-edit-titulo');
-    var detEditHIni  = document.getElementById('det-edit-hora-ini');
-    var detEditHFin  = document.getElementById('det-edit-hora-fin');
-    var detEditErr   = document.getElementById('det-edit-error');
-    var detBtnGuard  = document.getElementById('det-btn-guardar');
-    var detBtnCancel = document.getElementById('det-btn-cancelar-edit');
-    var editItemId   = null;
-
     if (detBtnEditar) {
         detBtnEditar.addEventListener('click', function () {
-            var ev = document.querySelector(
-                '.agenda-evento[data-id="' +
-                document.getElementById('det-btn-completar').dataset.itemId + '"]');
-            editItemId = ev ? ev.dataset.id : null;
-            if (detEditTit)  detEditTit.value  = ev ? (ev.dataset.titulo  || '') : '';
-            if (detEditHIni) detEditHIni.value = ev ? (ev.dataset.horaIni || '') : '';
-            if (detEditHFin) detEditHFin.value = ev ? (ev.dataset.horaFin || '') : '';
-            if (detEditErr)  detEditErr.classList.add('d-none');
-            if (detVista)    detVista.style.display = 'none';
-            if (detEdit)     detEdit.style.display  = 'block';
-        });
-    }
-
-    if (detBtnCancel) {
-        detBtnCancel.addEventListener('click', function () {
-            if (detEdit)  detEdit.style.display  = 'none';
-            if (detVista) detVista.style.display = 'block';
-        });
-    }
-
-    if (detBtnGuard) {
-        detBtnGuard.addEventListener('click', function () {
-            if (!editItemId) return;
-            var titulo  = detEditTit  ? detEditTit.value.trim()  : '';
-            var horaIni = detEditHIni ? detEditHIni.value        : '';
-            var horaFin = detEditHFin ? detEditHFin.value        : '';
-            if (!titulo) {
-                if (detEditErr) {
-                    detEditErr.textContent = 'El título es obligatorio.';
-                    detEditErr.classList.remove('d-none');
-                }
-                return;
+            var id = document.getElementById('det-btn-completar').dataset.itemId;
+            var ev = document.querySelector('.agenda-evento[data-id="' + id + '"]');
+            document.getElementById('modal-evento-detalle').style.display = 'none';
+            if (ev && window.abrirModalEditar) {
+                window.abrirModalEditar({
+                    id:         ev.dataset.id,
+                    titulo:     ev.dataset.titulo     || '',
+                    areaId:     ev.dataset.areaId     || '',
+                    contextoId: ev.dataset.contextoId || '',
+                    proyectoId: ev.dataset.proyectoId || '',
+                    fecha:      ev.dataset.fecha      || '',
+                    horaInicio: ev.dataset.horaIni    || '',
+                    horaFin:    ev.dataset.horaFin    || '',
+                });
             }
-            detBtnGuard.disabled = true;
-            fetch('/acciones/' + encodeURIComponent(editItemId), {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({
-                    _method:     'PATCH',
-                    titulo:      titulo,
-                    hora_inicio: horaIni,
-                    hora_fin:    horaFin,
-                }),
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (data.ok) {
-                    var ev = document.querySelector(
-                        '.agenda-evento[data-id="' + editItemId + '"]');
-                    if (ev) {
-                        var tEl = ev.querySelector('.agenda-evento-titulo');
-                        var hEl = ev.querySelector('.agenda-evento-hora');
-                        if (tEl) tEl.textContent = titulo;
-                        if (hEl && horaIni)
-                            hEl.textContent = horaIni + (horaFin ? ' – ' + horaFin : '');
-                        ev.dataset.titulo  = titulo;
-                        ev.dataset.horaIni = horaIni;
-                        ev.dataset.horaFin = horaFin;
-                        if (horaIni) {
-                            var horaBase = 5, pxSlot = 48;
-                            function horaPx(h) {
-                                var p = h.split(':');
-                                return ((parseInt(p[0]) - horaBase) * 60 + parseInt(p[1])) / 30 * pxSlot;
-                            }
-                            var newTop    = horaPx(horaIni);
-                            var newBottom = horaFin ? horaPx(horaFin) : newTop + pxSlot;
-                            ev.style.top    = newTop + 'px';
-                            ev.style.height = Math.max(newBottom - newTop, pxSlot) + 'px';
-                        }
-                    }
-                    document.getElementById('modal-evento-detalle').style.display = 'none';
-                    if (detEdit)  detEdit.style.display  = 'none';
-                    if (detVista) detVista.style.display = 'block';
-                } else {
-                    if (detEditErr) {
-                        detEditErr.textContent = data.error || 'Error al guardar.';
-                        detEditErr.classList.remove('d-none');
-                    }
-                }
-                detBtnGuard.disabled = false;
-            })
-            .catch(function () {
-                if (detEditErr) {
-                    detEditErr.textContent = 'Error de conexión.';
-                    detEditErr.classList.remove('d-none');
-                }
-                detBtnGuard.disabled = false;
-            });
         });
     }
+
+    // ── Actualizar DOM del grid tras edición ─────────────────
+    document.addEventListener('accion:editada', function (e) {
+        var d  = e.detail;
+        var ev = document.querySelector('.agenda-evento[data-id="' + d.id + '"]');
+        if (!ev) return;
+        var tEl = ev.querySelector('.agenda-evento-titulo');
+        var hEl = ev.querySelector('.agenda-evento-hora');
+        if (tEl) tEl.textContent = d.titulo;
+        if (hEl && d.horaInicio) hEl.textContent = d.horaInicio + (d.horaFin ? ' – ' + d.horaFin : '');
+        ev.dataset.titulo     = d.titulo;
+        ev.dataset.areaId     = d.areaId     || '';
+        ev.dataset.contextoId = d.contextoId || '';
+        ev.dataset.proyectoId = d.proyectoId || '';
+        ev.dataset.fecha      = d.fecha      || '';
+        ev.dataset.horaIni    = d.horaInicio || '';
+        ev.dataset.horaFin    = d.horaFin    || '';
+        if (d.horaInicio) {
+            var horaPx = function (h) {
+                var p = h.split(':');
+                return ((parseInt(p[0], 10) - 5) * 60 + parseInt(p[1], 10)) / 30 * 48;
+            };
+            var newTop    = horaPx(d.horaInicio);
+            var newBottom = d.horaFin ? horaPx(d.horaFin) : newTop + 48;
+            ev.style.top    = newTop + 'px';
+            ev.style.height = Math.max(newBottom - newTop, 48) + 'px';
+        }
+    });
 });
 </script>

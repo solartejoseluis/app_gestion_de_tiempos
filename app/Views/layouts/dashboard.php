@@ -26,6 +26,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <?php require BASE_PATH . '/app/Views/components/modal_procesamiento.php'; ?>
 <script src="/js/procesamiento.js"></script>
+<?php require BASE_PATH . '/app/Views/components/modal_editar_accion.php'; ?>
+<script src="/js/editar_accion.js"></script>
 <script>
 (function () {
     var toggle  = document.getElementById('sidebar-toggle');

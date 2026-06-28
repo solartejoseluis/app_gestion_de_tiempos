@@ -10,7 +10,7 @@ class SomedayModel extends Model
         $sql = "
             SELECT
                 i.id, i.titulo, i.notas, i.area_id,
-                i.fecha_revision, i.created_at,
+                i.fecha_revision, i.hora_inicio, i.hora_fin, i.created_at,
                 a.nombre AS area_nombre,
                 a.color  AS area_color
             FROM items i
