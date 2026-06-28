@@ -1,4 +1,4 @@
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
 
     <div class="sidebar-header">
         <div class="user-name"><?= htmlspecialchars($_SESSION['usuario_nombre'] ?? '') ?></div>

@@ -11,6 +11,12 @@
 <body>
 
 <div class="app-shell">
+    <button class="sidebar-toggle d-md-none"
+            id="sidebar-toggle"
+            aria-label="Abrir menú">
+        <i class="bi bi-list"></i>
+    </button>
+    <div class="sidebar-overlay d-none" id="sidebar-overlay"></div>
     <?php require BASE_PATH . '/app/Views/layouts/sidebar.php'; ?>
     <main class="main">
         <?php require $contentView; ?>
@@ -20,5 +26,39 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <?php require BASE_PATH . '/app/Views/components/modal_procesamiento.php'; ?>
 <script src="/js/procesamiento.js"></script>
+<script>
+(function () {
+    var toggle  = document.getElementById('sidebar-toggle');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (!toggle || !sidebar || !overlay) return;
+
+    function abrirSidebar() {
+        sidebar.classList.add('sidebar-open');
+        overlay.classList.remove('d-none');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function cerrarSidebar() {
+        sidebar.classList.remove('sidebar-open');
+        overlay.classList.add('d-none');
+        document.body.style.overflow = '';
+    }
+
+    toggle.addEventListener('click', function () {
+        if (sidebar.classList.contains('sidebar-open')) {
+            cerrarSidebar();
+        } else {
+            abrirSidebar();
+        }
+    });
+
+    overlay.addEventListener('click', cerrarSidebar);
+
+    sidebar.querySelectorAll('a.nav-item').forEach(function (a) {
+        a.addEventListener('click', cerrarSidebar);
+    });
+}());
+</script>
 </body>
 </html>
