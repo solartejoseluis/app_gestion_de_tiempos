@@ -132,6 +132,9 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
         ?>
             <div class="agenda-evento <?= $clase ?>"
                  data-id="<?= $item['id'] ?>"
+                 data-titulo="<?= htmlspecialchars($item['titulo'], ENT_QUOTES) ?>"
+                 data-hora-ini="<?= $horaIni ?>"
+                 data-hora-fin="<?= $horaFin ?>"
                  style="top:<?= $top ?>px;height:<?= $height ?>px">
                 <div class="agenda-evento-hora">
                     <?= $horaIni ?> – <?= $horaFin ?>
@@ -158,6 +161,9 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
             $height = max($horaToPx($horaFin) - $top, $pxSlot);
         ?>
             <div class="agenda-evento tipo-completada"
+                 data-titulo="<?= htmlspecialchars($item['titulo'], ENT_QUOTES) ?>"
+                 data-hora-ini="<?= $horaIni ?>"
+                 data-hora-fin="<?= $horaFin ?>"
                  style="top:<?= $top ?>px;height:<?= $height ?>px">
                 <div class="agenda-evento-titulo">
                     <?= htmlspecialchars($item['titulo']) ?>
@@ -216,6 +222,16 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
             </div>
         </div>
         <div style="margin-bottom:12px">
+            <select id="crear-agenda-area" class="form-select form-select-sm">
+                <option value="">Sin área</option>
+                <?php foreach ($areas_select as $a): ?>
+                    <option value="<?= $a['id'] ?>">
+                        <?= htmlspecialchars($a['nombre']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div style="margin-bottom:12px">
             <select id="crear-agenda-contexto" class="form-select form-select-sm">
                 <option value="">Sin contexto</option>
                 <?php foreach ($contextos as $ctx): ?>
@@ -255,26 +271,76 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
             background:rgba(0,0,0,.4)"
      onclick="if(event.target===this)this.style.display='none'">
     <div style="background:#fff;border-radius:12px;padding:20px;
-                width:340px;max-width:90vw;position:absolute;
+                width:380px;max-width:92vw;position:absolute;
                 top:50%;left:50%;transform:translate(-50%,-50%);
                 box-shadow:0 8px 32px rgba(0,0,0,.18)">
-        <div style="display:flex;justify-content:space-between;margin-bottom:12px">
-            <h6 id="det-dia-titulo"
-                style="margin:0;font-size:.95rem;font-weight:600;flex:1"></h6>
-            <button onclick="document.getElementById('modal-evento-detalle-dia').style.display='none'"
-                    style="background:none;border:none;font-size:1.2rem;cursor:pointer">×</button>
+
+        <!-- Vista detalle -->
+        <div id="det-dia-vista">
+            <div style="display:flex;justify-content:space-between;
+                        align-items:start;margin-bottom:12px">
+                <h6 id="det-dia-titulo"
+                    style="margin:0;font-size:.95rem;font-weight:600;flex:1"></h6>
+                <button onclick="document.getElementById('modal-evento-detalle-dia').style.display='none'"
+                        style="background:none;border:none;font-size:1.2rem;cursor:pointer">×</button>
+            </div>
+            <p id="det-dia-hora"
+               style="font-size:.82rem;color:#6b7280;margin:0 0 16px"></p>
+            <div style="display:flex;gap:8px">
+                <button id="det-dia-btn-completar" class="btn btn-sm btn-success">
+                    ✓ Completar
+                </button>
+                <button id="det-dia-btn-editar" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-pencil me-1"></i>Editar
+                </button>
+                <button onclick="document.getElementById('modal-evento-detalle-dia').style.display='none'"
+                        class="btn btn-sm btn-outline-secondary">
+                    Cerrar
+                </button>
+            </div>
         </div>
-        <p id="det-dia-hora"
-           style="font-size:.82rem;color:#6b7280;margin:0 0 12px"></p>
-        <div style="display:flex;gap:8px">
-            <button id="det-dia-btn-completar" class="btn btn-sm btn-success">
-                ✓ Completar
-            </button>
-            <button onclick="document.getElementById('modal-evento-detalle-dia').style.display='none'"
-                    class="btn btn-sm btn-outline-secondary">
-                Cerrar
-            </button>
+
+        <!-- Panel de edición -->
+        <div id="det-dia-edit" style="display:none">
+            <div style="margin-bottom:12px">
+                <label style="font-size:.75rem;color:#6b7280;
+                              display:block;margin-bottom:4px">Título *</label>
+                <input id="det-dia-edit-titulo" type="text"
+                       class="form-control form-control-sm"
+                       maxlength="255">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;
+                        gap:8px;margin-bottom:12px">
+                <div>
+                    <label style="font-size:.75rem;color:#6b7280;
+                                  display:block;margin-bottom:4px">
+                        Hora inicio
+                    </label>
+                    <input id="det-dia-edit-hora-ini" type="time"
+                           class="form-control form-control-sm">
+                </div>
+                <div>
+                    <label style="font-size:.75rem;color:#6b7280;
+                                  display:block;margin-bottom:4px">
+                        Hora fin
+                    </label>
+                    <input id="det-dia-edit-hora-fin" type="time"
+                           class="form-control form-control-sm">
+                </div>
+            </div>
+            <div id="det-dia-edit-error"
+                 class="text-danger small d-none mb-2"></div>
+            <div style="display:flex;gap:8px">
+                <button id="det-dia-btn-guardar" class="btn btn-sm btn-primary">
+                    Guardar
+                </button>
+                <button id="det-dia-btn-cancelar-edit"
+                        class="btn btn-sm btn-outline-secondary">
+                    Cancelar
+                </button>
+            </div>
         </div>
+
     </div>
 </div>
 
@@ -323,6 +389,7 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
             var titulo   = document.getElementById('crear-agenda-titulo').value.trim();
             var horaIni  = document.getElementById('crear-agenda-hora-ini').value;
             var horaFin  = document.getElementById('crear-agenda-hora-fin').value;
+            var area     = document.getElementById('crear-agenda-area')?.value || '';
             var contexto = document.getElementById('crear-agenda-contexto').value;
             var proyecto = document.getElementById('crear-agenda-proyecto').value;
             var fecha    = document.getElementById('crear-agenda-fecha').value;
@@ -344,6 +411,7 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
                     fecha_accion: fecha,
                     hora_inicio:  horaIni,
                     hora_fin:     horaFin,
+                    area_id:      area,
                     contexto_id:  contexto,
                     proyecto_id:  proyecto,
                     tipo:         'accion',
@@ -374,10 +442,14 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
         el.addEventListener('click', function (e) {
             e.stopPropagation();
             document.getElementById('det-dia-titulo').textContent =
-                (el.querySelector('.agenda-evento-titulo') || {}).textContent || '';
+                (el.querySelector('.agenda-evento-titulo') || {}).textContent?.trim() || '';
             document.getElementById('det-dia-hora').textContent =
-                (el.querySelector('.agenda-evento-hora') || {}).textContent || '';
+                (el.querySelector('.agenda-evento-hora') || {}).textContent?.trim() || '';
             document.getElementById('det-dia-btn-completar').dataset.itemId = el.dataset.id;
+            var deE = document.getElementById('det-dia-edit');
+            var deV = document.getElementById('det-dia-vista');
+            if (deE) deE.style.display  = 'none';
+            if (deV) deV.style.display  = 'block';
             if (modalDet) modalDet.style.display = 'block';
         });
     });
@@ -406,6 +478,111 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
                 }
             })
             .catch(function () { btn.disabled = false; });
+        });
+    }
+
+    // ── Botón Editar ─────────────────────────────────
+    var diaEditItemId = null;
+    var diaBtnEditar  = document.getElementById('det-dia-btn-editar');
+    var diaVista      = document.getElementById('det-dia-vista');
+    var diaEdit       = document.getElementById('det-dia-edit');
+    var diaEditTit    = document.getElementById('det-dia-edit-titulo');
+    var diaEditHIni   = document.getElementById('det-dia-edit-hora-ini');
+    var diaEditHFin   = document.getElementById('det-dia-edit-hora-fin');
+    var diaEditErr    = document.getElementById('det-dia-edit-error');
+    var diaBtnGuard   = document.getElementById('det-dia-btn-guardar');
+    var diaBtnCancel  = document.getElementById('det-dia-btn-cancelar-edit');
+
+    if (diaBtnEditar) {
+        diaBtnEditar.addEventListener('click', function () {
+            var ev = document.querySelector(
+                '.agenda-evento[data-id="' +
+                document.getElementById('det-dia-btn-completar').dataset.itemId + '"]');
+            diaEditItemId = ev ? ev.dataset.id : null;
+            if (diaEditTit)  diaEditTit.value  = ev ? (ev.dataset.titulo  || '') : '';
+            if (diaEditHIni) diaEditHIni.value = ev ? (ev.dataset.horaIni || '') : '';
+            if (diaEditHFin) diaEditHFin.value = ev ? (ev.dataset.horaFin || '') : '';
+            if (diaEditErr)  diaEditErr.classList.add('d-none');
+            if (diaVista)    diaVista.style.display = 'none';
+            if (diaEdit)     diaEdit.style.display  = 'block';
+        });
+    }
+
+    if (diaBtnCancel) {
+        diaBtnCancel.addEventListener('click', function () {
+            if (diaEdit)  diaEdit.style.display  = 'none';
+            if (diaVista) diaVista.style.display = 'block';
+        });
+    }
+
+    if (diaBtnGuard) {
+        diaBtnGuard.addEventListener('click', function () {
+            if (!diaEditItemId) return;
+            var titulo  = diaEditTit  ? diaEditTit.value.trim()  : '';
+            var horaIni = diaEditHIni ? diaEditHIni.value        : '';
+            var horaFin = diaEditHFin ? diaEditHFin.value        : '';
+            if (!titulo) {
+                if (diaEditErr) {
+                    diaEditErr.textContent = 'El título es obligatorio.';
+                    diaEditErr.classList.remove('d-none');
+                }
+                return;
+            }
+            diaBtnGuard.disabled = true;
+            fetch('/acciones/' + encodeURIComponent(diaEditItemId), {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    _method:     'PATCH',
+                    titulo:      titulo,
+                    hora_inicio: horaIni,
+                    hora_fin:    horaFin,
+                }),
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.ok) {
+                    var ev = document.querySelector(
+                        '.agenda-evento[data-id="' + diaEditItemId + '"]');
+                    if (ev) {
+                        var tEl = ev.querySelector('.agenda-evento-titulo');
+                        var hEl = ev.querySelector('.agenda-evento-hora');
+                        if (tEl) tEl.textContent = titulo;
+                        if (hEl && horaIni)
+                            hEl.textContent = horaIni + (horaFin ? ' – ' + horaFin : '');
+                        ev.dataset.titulo  = titulo;
+                        ev.dataset.horaIni = horaIni;
+                        ev.dataset.horaFin = horaFin;
+                        if (horaIni) {
+                            var horaBase = 5, pxSlot = 48;
+                            function horaPx(h) {
+                                var p = h.split(':');
+                                return ((parseInt(p[0]) - horaBase) * 60 + parseInt(p[1])) / 30 * pxSlot;
+                            }
+                            var newTop    = horaPx(horaIni);
+                            var newBottom = horaFin ? horaPx(horaFin) : newTop + pxSlot;
+                            ev.style.top    = newTop + 'px';
+                            ev.style.height = Math.max(newBottom - newTop, pxSlot) + 'px';
+                        }
+                    }
+                    document.getElementById('modal-evento-detalle-dia').style.display = 'none';
+                    if (diaEdit)  diaEdit.style.display  = 'none';
+                    if (diaVista) diaVista.style.display = 'block';
+                } else {
+                    if (diaEditErr) {
+                        diaEditErr.textContent = data.error || 'Error al guardar.';
+                        diaEditErr.classList.remove('d-none');
+                    }
+                }
+                diaBtnGuard.disabled = false;
+            })
+            .catch(function () {
+                if (diaEditErr) {
+                    diaEditErr.textContent = 'Error de conexión.';
+                    diaEditErr.classList.remove('d-none');
+                }
+                diaBtnGuard.disabled = false;
+            });
         });
     }
 

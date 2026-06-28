@@ -99,6 +99,16 @@ class AccionesController extends Controller
             $params[] = $body['notas'] === '' ? null : $body['notas'];
         }
 
+        if (array_key_exists('hora_inicio', $body)) {
+            $sets[]   = 'hora_inicio = ?';
+            $params[] = trim((string) ($body['hora_inicio'] ?? '')) ?: null;
+        }
+
+        if (array_key_exists('hora_fin', $body)) {
+            $sets[]   = 'hora_fin = ?';
+            $params[] = trim((string) ($body['hora_fin'] ?? '')) ?: null;
+        }
+
         if (empty($sets)) {
             $this->error('No hay campos a actualizar.');
         }
@@ -176,6 +186,7 @@ class AccionesController extends Controller
         $horaFin    = trim($this->input('hora_fin', ''))    ?: null;
         $contextoId = (int) $this->input('contexto_id', 0)  ?: null;
         $proyectoId = (int) $this->input('proyecto_id', 0)  ?: null;
+        $areaId     = (int) $this->input('area_id', 0)      ?: null;
 
         if ($titulo === '') {
             $this->error('El título es obligatorio.');
@@ -187,11 +198,11 @@ class AccionesController extends Controller
         $db->prepare('
             INSERT INTO items
             (usuario_id, titulo, tipo, fecha_accion,
-             hora_inicio, hora_fin, contexto_id, proyecto_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+             hora_inicio, hora_fin, contexto_id, proyecto_id, area_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ')->execute([
             $uid, $titulo, $tipo, $fecha ?: null,
-            $horaIni, $horaFin, $contextoId, $proyectoId,
+            $horaIni, $horaFin, $contextoId, $proyectoId, $areaId,
         ]);
 
         $this->json(['id' => $db->lastInsertId()]);

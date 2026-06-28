@@ -59,6 +59,29 @@ class AgendaController extends Controller
             $completadasPorDia[$idx][] = $item;
         }
 
+        $db      = Database::connection();
+        $stmtCtx = $db->prepare(
+            'SELECT id, nombre, color FROM contextos
+              WHERE usuario_id = ? AND deleted_at IS NULL ORDER BY nombre'
+        );
+        $stmtCtx->execute([$uid]);
+        $contextos = $stmtCtx->fetchAll();
+
+        $stmtPrj = $db->prepare(
+            "SELECT id, nombre FROM proyectos
+              WHERE usuario_id = ? AND estado = 'activo'
+                AND deleted_at IS NULL ORDER BY nombre"
+        );
+        $stmtPrj->execute([$uid]);
+        $proyectos = $stmtPrj->fetchAll();
+
+        $stmtArea = $db->prepare(
+            'SELECT id, nombre, color FROM areas
+              WHERE usuario_id = ? AND deleted_at IS NULL ORDER BY nombre'
+        );
+        $stmtArea->execute([$uid]);
+        $areas_select = $stmtArea->fetchAll();
+
         $this->layout('agenda.index', [
             'pageTitle'         => 'Agenda',
             'currentRoute'      => '/agenda',
@@ -69,6 +92,9 @@ class AgendaController extends Controller
             'bloquesPorDia'     => $bloquesPorDia,
             'itemsPorDia'       => $itemsPorDia,
             'completadasPorDia' => $completadasPorDia,
+            'contextos'         => $contextos,
+            'proyectos'         => $proyectos,
+            'areas_select'      => $areas_select,
         ]);
     }
 
@@ -125,6 +151,13 @@ class AgendaController extends Controller
         $stmtPrj->execute([$uid]);
         $proyectos = $stmtPrj->fetchAll();
 
+        $stmtArea = $db->prepare(
+            'SELECT id, nombre, color FROM areas
+              WHERE usuario_id = ? AND deleted_at IS NULL ORDER BY nombre'
+        );
+        $stmtArea->execute([$uid]);
+        $areas_select = $stmtArea->fetchAll();
+
         $this->layout('agenda.dia', [
             'pageTitle'    => 'Agenda — ' . $fecha->format('j') . ' ' . $fechaStr,
             'currentRoute' => '/agenda',
@@ -136,6 +169,7 @@ class AgendaController extends Controller
             'completadas'  => $datos['completadas'],
             'contextos'    => $contextos,
             'proyectos'    => $proyectos,
+            'areas_select' => $areas_select,
         ]);
     }
 }

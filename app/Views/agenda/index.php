@@ -121,6 +121,7 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
             $top = $s * $pxSlot;
         ?>
             <div class="agenda-slot-line <?= ($s % 2 === 0) ? 'hora-entera' : '' ?>"
+                 data-slot="<?= $s ?>"
                  style="top:<?= $top ?>px"></div>
         <?php endfor; ?>
 
@@ -163,6 +164,9 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
         ?>
             <div class="agenda-evento <?= $tipoClase ?>"
                  data-id="<?= $item['id'] ?>"
+                 data-titulo="<?= htmlspecialchars($item['titulo'], ENT_QUOTES) ?>"
+                 data-hora-ini="<?= $horaIni ?>"
+                 data-hora-fin="<?= $horaFin ?>"
                  style="top:<?= $top ?>px;height:<?= $height ?>px"
                  title="<?= htmlspecialchars($item['titulo']) ?>">
                 <div class="agenda-evento-hora">
@@ -185,6 +189,9 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
             $height = max($horaToPx($horaFin) - $top, $pxSlot);
         ?>
             <div class="agenda-evento tipo-completada"
+                 data-titulo="<?= htmlspecialchars($item['titulo'], ENT_QUOTES) ?>"
+                 data-hora-ini="<?= $horaIni ?>"
+                 data-hora-fin="<?= $horaFin ?>"
                  style="top:<?= $top ?>px;height:<?= $height ?>px"
                  title="<?= htmlspecialchars($item['titulo']) ?>">
                 <div class="agenda-evento-titulo">
@@ -211,35 +218,162 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
 
 </div><!-- /.agenda-wrapper -->
 
+<!-- Mini-modal: crear acción desde slot ───────────────── -->
+<div id="modal-crear-agenda"
+     style="display:none;position:fixed;inset:0;z-index:2000;
+            background:rgba(0,0,0,.4)"
+     onclick="if(event.target===this)this.style.display='none'">
+    <div style="background:#fff;border-radius:12px;padding:20px;
+                width:380px;max-width:92vw;position:absolute;
+                top:50%;left:50%;transform:translate(-50%,-50%);
+                box-shadow:0 8px 32px rgba(0,0,0,.18)">
+        <div style="display:flex;justify-content:space-between;
+                    margin-bottom:16px">
+            <h6 style="margin:0;font-weight:600">Nueva acción</h6>
+            <button onclick="document.getElementById('modal-crear-agenda').style.display='none'"
+                    style="background:none;border:none;font-size:1.2rem;cursor:pointer">×</button>
+        </div>
+        <div style="margin-bottom:12px">
+            <input id="crear-agenda-titulo" type="text"
+                   class="form-control form-control-sm"
+                   placeholder="Título de la acción *"
+                   maxlength="255">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;
+                    gap:8px;margin-bottom:12px">
+            <div>
+                <label style="font-size:.75rem;color:#6b7280">Hora inicio</label>
+                <input id="crear-agenda-hora-ini" type="time"
+                       class="form-control form-control-sm">
+            </div>
+            <div>
+                <label style="font-size:.75rem;color:#6b7280">Hora fin</label>
+                <input id="crear-agenda-hora-fin" type="time"
+                       class="form-control form-control-sm">
+            </div>
+        </div>
+        <div style="margin-bottom:12px">
+            <select id="crear-agenda-area" class="form-select form-select-sm">
+                <option value="">Sin área</option>
+                <?php foreach ($areas_select as $a): ?>
+                    <option value="<?= $a['id'] ?>">
+                        <?= htmlspecialchars($a['nombre']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div style="margin-bottom:12px">
+            <select id="crear-agenda-contexto" class="form-select form-select-sm">
+                <option value="">Sin contexto</option>
+                <?php foreach ($contextos as $ctx): ?>
+                    <option value="<?= $ctx['id'] ?>">
+                        @<?= htmlspecialchars($ctx['nombre']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div style="margin-bottom:16px">
+            <select id="crear-agenda-proyecto" class="form-select form-select-sm">
+                <option value="">Sin proyecto</option>
+                <?php foreach ($proyectos as $prj): ?>
+                    <option value="<?= $prj['id'] ?>">
+                        <?= htmlspecialchars($prj['nombre']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <input type="hidden" id="crear-agenda-fecha" value="">
+        <div id="crear-agenda-error" class="text-danger small d-none mb-2"></div>
+        <div style="display:flex;gap:8px">
+            <button id="btn-crear-agenda-guardar" class="btn btn-sm btn-primary">
+                Guardar
+            </button>
+            <button onclick="document.getElementById('modal-crear-agenda').style.display='none'"
+                    class="btn btn-sm btn-outline-secondary">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Mini-modal: detalle de evento ────────────────────── -->
 <div id="modal-evento-detalle"
      style="display:none;position:fixed;inset:0;z-index:2000;
             background:rgba(0,0,0,.4)"
      onclick="if(event.target===this)this.style.display='none'">
     <div style="background:#fff;border-radius:12px;padding:20px;
-                width:340px;max-width:90vw;position:absolute;
+                width:380px;max-width:92vw;position:absolute;
                 top:50%;left:50%;transform:translate(-50%,-50%);
                 box-shadow:0 8px 32px rgba(0,0,0,.18)">
-        <div style="display:flex;justify-content:space-between;
-                    align-items:start;margin-bottom:12px">
-            <h6 id="det-titulo"
-                style="margin:0;font-size:.95rem;font-weight:600;
-                       flex:1;padding-right:8px"></h6>
-            <button onclick="document.getElementById('modal-evento-detalle').style.display='none'"
-                    style="background:none;border:none;font-size:1.2rem;
-                           cursor:pointer;color:#6b7280">×</button>
+
+        <!-- Vista detalle -->
+        <div id="det-vista">
+            <div style="display:flex;justify-content:space-between;
+                        align-items:start;margin-bottom:12px">
+                <h6 id="det-titulo"
+                    style="margin:0;font-size:.95rem;font-weight:600;
+                           flex:1;padding-right:8px"></h6>
+                <button onclick="document.getElementById('modal-evento-detalle').style.display='none'"
+                        style="background:none;border:none;font-size:1.2rem;
+                               cursor:pointer;color:#6b7280">×</button>
+            </div>
+            <p id="det-hora"
+               style="font-size:.82rem;color:#6b7280;margin:0 0 16px"></p>
+            <div style="display:flex;gap:8px">
+                <button id="det-btn-completar" class="btn btn-sm btn-success">
+                    ✓ Completar
+                </button>
+                <button id="det-btn-editar" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-pencil me-1"></i>Editar
+                </button>
+                <button onclick="document.getElementById('modal-evento-detalle').style.display='none'"
+                        class="btn btn-sm btn-outline-secondary">
+                    Cerrar
+                </button>
+            </div>
         </div>
-        <p id="det-hora" style="font-size:.82rem;color:#6b7280;margin:0 0 8px"></p>
-        <p id="det-ctx"  style="font-size:.82rem;color:#6b7280;margin:0 0 12px"></p>
-        <div style="display:flex;gap:8px">
-            <button id="det-btn-completar" class="btn btn-sm btn-success">
-                ✓ Completar
-            </button>
-            <button onclick="document.getElementById('modal-evento-detalle').style.display='none'"
-                    class="btn btn-sm btn-outline-secondary">
-                Cerrar
-            </button>
+
+        <!-- Panel de edición -->
+        <div id="det-edit" style="display:none">
+            <div style="margin-bottom:12px">
+                <label style="font-size:.75rem;color:#6b7280;
+                              display:block;margin-bottom:4px">Título *</label>
+                <input id="det-edit-titulo" type="text"
+                       class="form-control form-control-sm"
+                       maxlength="255">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;
+                        gap:8px;margin-bottom:12px">
+                <div>
+                    <label style="font-size:.75rem;color:#6b7280;
+                                  display:block;margin-bottom:4px">
+                        Hora inicio
+                    </label>
+                    <input id="det-edit-hora-ini" type="time"
+                           class="form-control form-control-sm">
+                </div>
+                <div>
+                    <label style="font-size:.75rem;color:#6b7280;
+                                  display:block;margin-bottom:4px">
+                        Hora fin
+                    </label>
+                    <input id="det-edit-hora-fin" type="time"
+                           class="form-control form-control-sm">
+                </div>
+            </div>
+            <div id="det-edit-error"
+                 class="text-danger small d-none mb-2"></div>
+            <div style="display:flex;gap:8px">
+                <button id="det-btn-guardar" class="btn btn-sm btn-primary">
+                    Guardar
+                </button>
+                <button id="det-btn-cancelar-edit"
+                        class="btn btn-sm btn-outline-secondary">
+                    Cancelar
+                </button>
+            </div>
         </div>
+
     </div>
 </div>
 
@@ -255,17 +389,100 @@ document.addEventListener('DOMContentLoaded', function () {
         scroll.scrollTop = Math.max(0, top - scroll.clientHeight / 3);
     }
 
+    // ── Clic en slot vacío → modal crear ────────────
+    var modalCrear = document.getElementById('modal-crear-agenda');
+    document.querySelectorAll('.agenda-slot-line').forEach(function (line) {
+        line.style.pointerEvents = 'auto';
+        line.style.cursor        = 'pointer';
+        line.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var slot    = parseInt(this.dataset.slot, 10);
+            var horaH   = 5 + Math.floor(slot / 2);
+            var horaM   = (slot % 2) * 30;
+            var horaIni = String(horaH).padStart(2, '0') + ':' + String(horaM).padStart(2, '0');
+            var horaFinH = horaH + (horaM === 30 ? 1 : 0);
+            var horaFinM = horaM === 30 ? 0 : 30;
+            var horaFin  = String(horaFinH).padStart(2, '0') + ':' + String(horaFinM).padStart(2, '0');
+            var col = this.closest('.agenda-dia-col');
+            var fecha = col ? (col.dataset.fecha || '') : '';
+            document.getElementById('crear-agenda-hora-ini').value = horaIni;
+            document.getElementById('crear-agenda-hora-fin').value = horaFin;
+            document.getElementById('crear-agenda-titulo').value   = '';
+            document.getElementById('crear-agenda-fecha').value    = fecha;
+            document.getElementById('crear-agenda-error').classList.add('d-none');
+            if (modalCrear) modalCrear.style.display = 'block';
+            setTimeout(function () {
+                document.getElementById('crear-agenda-titulo').focus();
+            }, 100);
+        });
+    });
+
+    // ── Guardar nueva acción ─────────────────────────
+    var btnGuardar = document.getElementById('btn-crear-agenda-guardar');
+    if (btnGuardar) {
+        btnGuardar.addEventListener('click', function () {
+            var titulo   = document.getElementById('crear-agenda-titulo').value.trim();
+            var horaIni  = document.getElementById('crear-agenda-hora-ini').value;
+            var horaFin  = document.getElementById('crear-agenda-hora-fin').value;
+            var area     = document.getElementById('crear-agenda-area')?.value || '';
+            var contexto = document.getElementById('crear-agenda-contexto').value;
+            var proyecto = document.getElementById('crear-agenda-proyecto').value;
+            var fecha    = document.getElementById('crear-agenda-fecha').value;
+            var errEl    = document.getElementById('crear-agenda-error');
+            if (!titulo) {
+                errEl.textContent = 'El título es obligatorio.';
+                errEl.classList.remove('d-none');
+                return;
+            }
+            errEl.classList.add('d-none');
+            btnGuardar.disabled = true;
+            fetch('/acciones/crear', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    titulo:       titulo,
+                    fecha_accion: fecha,
+                    hora_inicio:  horaIni,
+                    hora_fin:     horaFin,
+                    area_id:      area,
+                    contexto_id:  contexto,
+                    proyecto_id:  proyecto,
+                    tipo:         'accion',
+                }),
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.ok) {
+                    modalCrear.style.display = 'none';
+                    window.location.reload();
+                } else {
+                    errEl.textContent = data.error || 'Error al guardar.';
+                    errEl.classList.remove('d-none');
+                    btnGuardar.disabled = false;
+                }
+            })
+            .catch(function () {
+                errEl.textContent = 'Error de conexión.';
+                errEl.classList.remove('d-none');
+                btnGuardar.disabled = false;
+            });
+        });
+    }
+
     // ── Clic en evento → modal detalle ──────────────
     var modalDet = document.getElementById('modal-evento-detalle');
     document.querySelectorAll('.agenda-evento[data-id]').forEach(function (el) {
         el.addEventListener('click', function (e) {
             e.stopPropagation();
             document.getElementById('det-titulo').textContent =
-                (el.querySelector('.agenda-evento-titulo') || {}).textContent || '';
+                (el.querySelector('.agenda-evento-titulo') || {}).textContent?.trim() || '';
             document.getElementById('det-hora').textContent =
-                (el.querySelector('.agenda-evento-hora') || {}).textContent || '';
-            document.getElementById('det-ctx').textContent = '';
+                (el.querySelector('.agenda-evento-hora') || {}).textContent?.trim() || '';
             document.getElementById('det-btn-completar').dataset.itemId = el.dataset.id;
+            var deE = document.getElementById('det-edit');
+            var deV = document.getElementById('det-vista');
+            if (deE) deE.style.display  = 'none';
+            if (deV) deV.style.display  = 'block';
             if (modalDet) modalDet.style.display = 'block';
         });
     });
@@ -298,6 +515,111 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             })
             .catch(function () { btn.disabled = false; });
+        });
+    }
+
+    // ── Botón Editar ──────────────────────────────────────────
+    var detBtnEditar = document.getElementById('det-btn-editar');
+    var detVista     = document.getElementById('det-vista');
+    var detEdit      = document.getElementById('det-edit');
+    var detEditTit   = document.getElementById('det-edit-titulo');
+    var detEditHIni  = document.getElementById('det-edit-hora-ini');
+    var detEditHFin  = document.getElementById('det-edit-hora-fin');
+    var detEditErr   = document.getElementById('det-edit-error');
+    var detBtnGuard  = document.getElementById('det-btn-guardar');
+    var detBtnCancel = document.getElementById('det-btn-cancelar-edit');
+    var editItemId   = null;
+
+    if (detBtnEditar) {
+        detBtnEditar.addEventListener('click', function () {
+            var ev = document.querySelector(
+                '.agenda-evento[data-id="' +
+                document.getElementById('det-btn-completar').dataset.itemId + '"]');
+            editItemId = ev ? ev.dataset.id : null;
+            if (detEditTit)  detEditTit.value  = ev ? (ev.dataset.titulo  || '') : '';
+            if (detEditHIni) detEditHIni.value = ev ? (ev.dataset.horaIni || '') : '';
+            if (detEditHFin) detEditHFin.value = ev ? (ev.dataset.horaFin || '') : '';
+            if (detEditErr)  detEditErr.classList.add('d-none');
+            if (detVista)    detVista.style.display = 'none';
+            if (detEdit)     detEdit.style.display  = 'block';
+        });
+    }
+
+    if (detBtnCancel) {
+        detBtnCancel.addEventListener('click', function () {
+            if (detEdit)  detEdit.style.display  = 'none';
+            if (detVista) detVista.style.display = 'block';
+        });
+    }
+
+    if (detBtnGuard) {
+        detBtnGuard.addEventListener('click', function () {
+            if (!editItemId) return;
+            var titulo  = detEditTit  ? detEditTit.value.trim()  : '';
+            var horaIni = detEditHIni ? detEditHIni.value        : '';
+            var horaFin = detEditHFin ? detEditHFin.value        : '';
+            if (!titulo) {
+                if (detEditErr) {
+                    detEditErr.textContent = 'El título es obligatorio.';
+                    detEditErr.classList.remove('d-none');
+                }
+                return;
+            }
+            detBtnGuard.disabled = true;
+            fetch('/acciones/' + encodeURIComponent(editItemId), {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    _method:     'PATCH',
+                    titulo:      titulo,
+                    hora_inicio: horaIni,
+                    hora_fin:    horaFin,
+                }),
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.ok) {
+                    var ev = document.querySelector(
+                        '.agenda-evento[data-id="' + editItemId + '"]');
+                    if (ev) {
+                        var tEl = ev.querySelector('.agenda-evento-titulo');
+                        var hEl = ev.querySelector('.agenda-evento-hora');
+                        if (tEl) tEl.textContent = titulo;
+                        if (hEl && horaIni)
+                            hEl.textContent = horaIni + (horaFin ? ' – ' + horaFin : '');
+                        ev.dataset.titulo  = titulo;
+                        ev.dataset.horaIni = horaIni;
+                        ev.dataset.horaFin = horaFin;
+                        if (horaIni) {
+                            var horaBase = 5, pxSlot = 48;
+                            function horaPx(h) {
+                                var p = h.split(':');
+                                return ((parseInt(p[0]) - horaBase) * 60 + parseInt(p[1])) / 30 * pxSlot;
+                            }
+                            var newTop    = horaPx(horaIni);
+                            var newBottom = horaFin ? horaPx(horaFin) : newTop + pxSlot;
+                            ev.style.top    = newTop + 'px';
+                            ev.style.height = Math.max(newBottom - newTop, pxSlot) + 'px';
+                        }
+                    }
+                    document.getElementById('modal-evento-detalle').style.display = 'none';
+                    if (detEdit)  detEdit.style.display  = 'none';
+                    if (detVista) detVista.style.display = 'block';
+                } else {
+                    if (detEditErr) {
+                        detEditErr.textContent = data.error || 'Error al guardar.';
+                        detEditErr.classList.remove('d-none');
+                    }
+                }
+                detBtnGuard.disabled = false;
+            })
+            .catch(function () {
+                if (detEditErr) {
+                    detEditErr.textContent = 'Error de conexión.';
+                    detEditErr.classList.remove('d-none');
+                }
+                detBtnGuard.disabled = false;
+            });
         });
     }
 });
