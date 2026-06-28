@@ -39,7 +39,11 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
         <i class="bi bi-chevron-right"></i>
     </a>
     <span class="agenda-nav-title"><?= $tituloSemana ?></span>
-    <a href="/plantilla" class="btn btn-sm btn-outline-secondary ms-auto">
+    <a href="/agenda/dia?fecha=<?= date('Y-m-d') ?>"
+       class="btn btn-sm btn-outline-secondary ms-auto">
+        <i class="bi bi-calendar-day me-1"></i>Día
+    </a>
+    <a href="/plantilla" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-layout-wtf me-1"></i>Plantilla
     </a>
   </div>
@@ -53,7 +57,11 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
     ?>
     <div class="agenda-header-dia <?= $esHoy ? 'es-hoy' : '' ?>">
         <div class="dia-nombre"><?= $diasNom[$d] ?></div>
-        <div class="dia-num"><?= $fechaDia->format('j') ?></div>
+        <a href="/agenda/dia?fecha=<?= $fechaDia->format('Y-m-d') ?>"
+           class="dia-num-link"
+           style="text-decoration:none;color:inherit">
+            <div class="dia-num"><?= $fechaDia->format('j') ?></div>
+        </a>
     </div>
     <?php endfor; ?>
   </div>
@@ -203,14 +211,94 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
 
 </div><!-- /.agenda-wrapper -->
 
+<!-- Mini-modal: detalle de evento ────────────────────── -->
+<div id="modal-evento-detalle"
+     style="display:none;position:fixed;inset:0;z-index:2000;
+            background:rgba(0,0,0,.4)"
+     onclick="if(event.target===this)this.style.display='none'">
+    <div style="background:#fff;border-radius:12px;padding:20px;
+                width:340px;max-width:90vw;position:absolute;
+                top:50%;left:50%;transform:translate(-50%,-50%);
+                box-shadow:0 8px 32px rgba(0,0,0,.18)">
+        <div style="display:flex;justify-content:space-between;
+                    align-items:start;margin-bottom:12px">
+            <h6 id="det-titulo"
+                style="margin:0;font-size:.95rem;font-weight:600;
+                       flex:1;padding-right:8px"></h6>
+            <button onclick="document.getElementById('modal-evento-detalle').style.display='none'"
+                    style="background:none;border:none;font-size:1.2rem;
+                           cursor:pointer;color:#6b7280">×</button>
+        </div>
+        <p id="det-hora" style="font-size:.82rem;color:#6b7280;margin:0 0 8px"></p>
+        <p id="det-ctx"  style="font-size:.82rem;color:#6b7280;margin:0 0 12px"></p>
+        <div style="display:flex;gap:8px">
+            <button id="det-btn-completar" class="btn btn-sm btn-success">
+                ✓ Completar
+            </button>
+            <button onclick="document.getElementById('modal-evento-detalle').style.display='none'"
+                    class="btn btn-sm btn-outline-secondary">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // ── Scroll a hora actual ─────────────────────────
     var scroll = document.getElementById('agenda-scroll');
-    if (!scroll) return;
-    var ahora    = new Date();
-    var horaBase = 5;
-    var pxSlot   = 48;
-    var top = ((ahora.getHours() - horaBase) * 60 + ahora.getMinutes()) / 30 * pxSlot;
-    scroll.scrollTop = Math.max(0, top - scroll.clientHeight / 3);
+    if (scroll) {
+        var ahora    = new Date();
+        var horaBase = 5;
+        var pxSlot   = 48;
+        var top = ((ahora.getHours() - horaBase) * 60 + ahora.getMinutes()) / 30 * pxSlot;
+        scroll.scrollTop = Math.max(0, top - scroll.clientHeight / 3);
+    }
+
+    // ── Clic en evento → modal detalle ──────────────
+    var modalDet = document.getElementById('modal-evento-detalle');
+    document.querySelectorAll('.agenda-evento[data-id]').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+            e.stopPropagation();
+            document.getElementById('det-titulo').textContent =
+                (el.querySelector('.agenda-evento-titulo') || {}).textContent || '';
+            document.getElementById('det-hora').textContent =
+                (el.querySelector('.agenda-evento-hora') || {}).textContent || '';
+            document.getElementById('det-ctx').textContent = '';
+            document.getElementById('det-btn-completar').dataset.itemId = el.dataset.id;
+            if (modalDet) modalDet.style.display = 'block';
+        });
+    });
+
+    // ── Completar desde modal detalle ────────────────
+    var btnDetCompletar = document.getElementById('det-btn-completar');
+    if (btnDetCompletar) {
+        btnDetCompletar.addEventListener('click', function () {
+            var btn = this;
+            var id  = btn.dataset.itemId;
+            if (!id) return;
+            btn.disabled = true;
+            fetch('/acciones/completar', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'id=' + encodeURIComponent(id),
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.ok) {
+                    if (modalDet) modalDet.style.display = 'none';
+                    var ev = document.querySelector('.agenda-evento[data-id="' + id + '"]');
+                    if (ev) {
+                        ev.className = 'agenda-evento tipo-completada';
+                        var tituloEl = ev.querySelector('.agenda-evento-titulo');
+                        if (tituloEl) tituloEl.style.textDecoration = 'line-through';
+                    }
+                } else {
+                    btn.disabled = false;
+                }
+            })
+            .catch(function () { btn.disabled = false; });
+        });
+    }
 });
 </script>

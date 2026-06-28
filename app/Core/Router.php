@@ -92,6 +92,7 @@ class Router
         // Próximas acciones
         $this->get('/acciones',                  'AccionesController', 'index');
         $this->post('/acciones/completar',         'AccionesController', 'completar');
+        $this->post('/acciones/crear',             'AccionesController', 'crear');
         $this->post('/acciones/{id}/reactivar',  'AccionesController', 'reactivar');
         $this->patch('/acciones/{id}',           'AccionesController', 'update');
         $this->patch('/acciones/{id}/completar', 'AccionesController', 'completar');
@@ -150,6 +151,7 @@ class Router
         $this->delete('/plantilla/{id}',            'PlantillaController', 'eliminar');
 
         // Agenda
+        $this->get('/agenda/dia',                   'AgendaController', 'dia');
         $this->get('/agenda',                       'AgendaController', 'index');
 
         // Configuración

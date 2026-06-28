@@ -71,4 +71,71 @@ class AgendaController extends Controller
             'completadasPorDia' => $completadasPorDia,
         ]);
     }
+
+    public function dia(): void
+    {
+        $this->requireAuth();
+        $uid = (int) $_SESSION['usuario_id'];
+
+        $fechaParam = $_GET['fecha'] ?? date('Y-m-d');
+        try {
+            $fecha = new DateTime($fechaParam);
+        } catch (\Exception $e) {
+            $fecha = new DateTime();
+        }
+        $fechaStr = $fecha->format('Y-m-d');
+
+        $datos = (new AgendaModel())->getSemana($uid, $fechaStr, $fechaStr);
+
+        // Bloques activos en este día de la semana
+        $diaSemana = (int) $fecha->format('N');
+        $bloques   = [];
+        foreach ($datos['bloques'] as $bloque) {
+            $dias = explode(',', $bloque['dias_semana']);
+            if (in_array((string) $diaSemana, $dias, true)) {
+                $bloques[] = $bloque;
+            }
+        }
+
+        // Ítems del día separados por hora
+        $conHora = [];
+        $sinHora = [];
+        foreach ($datos['items'] as $item) {
+            if ($item['hora_inicio'] || $item['tipo_tiempo'] === 'cita') {
+                $conHora[] = $item;
+            } else {
+                $sinHora[] = $item;
+            }
+        }
+
+        // Contextos y proyectos para el select del mini-modal
+        $db      = Database::connection();
+        $stmtCtx = $db->prepare(
+            'SELECT id, nombre, color FROM contextos
+              WHERE usuario_id = ? AND deleted_at IS NULL ORDER BY nombre'
+        );
+        $stmtCtx->execute([$uid]);
+        $contextos = $stmtCtx->fetchAll();
+
+        $stmtPrj = $db->prepare(
+            "SELECT id, nombre FROM proyectos
+              WHERE usuario_id = ? AND estado = 'activo'
+                AND deleted_at IS NULL ORDER BY nombre"
+        );
+        $stmtPrj->execute([$uid]);
+        $proyectos = $stmtPrj->fetchAll();
+
+        $this->layout('agenda.dia', [
+            'pageTitle'    => 'Agenda — ' . $fecha->format('j') . ' ' . $fechaStr,
+            'currentRoute' => '/agenda',
+            'fecha'        => $fecha,
+            'fechaStr'     => $fechaStr,
+            'bloques'      => $bloques,
+            'conHora'      => $conHora,
+            'sinHora'      => $sinHora,
+            'completadas'  => $datos['completadas'],
+            'contextos'    => $contextos,
+            'proyectos'    => $proyectos,
+        ]);
+    }
 }

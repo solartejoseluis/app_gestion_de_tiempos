@@ -165,6 +165,38 @@ class AccionesController extends Controller
         $this->json(null);
     }
 
+    public function crear(): void
+    {
+        $this->requireAuth();
+        $uid = (int) $_SESSION['usuario_id'];
+
+        $titulo     = trim($this->input('titulo', ''));
+        $fecha      = trim($this->input('fecha_accion', ''));
+        $horaIni    = trim($this->input('hora_inicio', '')) ?: null;
+        $horaFin    = trim($this->input('hora_fin', ''))    ?: null;
+        $contextoId = (int) $this->input('contexto_id', 0)  ?: null;
+        $proyectoId = (int) $this->input('proyecto_id', 0)  ?: null;
+
+        if ($titulo === '') {
+            $this->error('El título es obligatorio.');
+        }
+
+        $tipo = $proyectoId ? 'proyecto_accion' : 'accion';
+
+        $db = Database::connection();
+        $db->prepare('
+            INSERT INTO items
+            (usuario_id, titulo, tipo, fecha_accion,
+             hora_inicio, hora_fin, contexto_id, proyecto_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ')->execute([
+            $uid, $titulo, $tipo, $fecha ?: null,
+            $horaIni, $horaFin, $contextoId, $proyectoId,
+        ]);
+
+        $this->json(['id' => $db->lastInsertId()]);
+    }
+
     public function destroy(string $id): void
     {
         $this->requireAuth();
