@@ -5,6 +5,14 @@
     let modoProyectoId = null;
     let modoAreaId     = '';
 
+    // ── Caché de datos de selects ─────────────────────────────
+    var _cache = {
+        areas:     null,
+        personas:  null,
+        contextos: null,
+        proyectos: null,
+    };
+
     // ── Helpers DOM ───────────────────────────────────────────
     const el = (id) => document.getElementById(id);
 
@@ -45,6 +53,13 @@
             body: new URLSearchParams(params),
         });
         return res.json();
+    }
+
+    async function fetchCached(key, url) {
+        if (_cache[key] !== null) return _cache[key];
+        var data = await post(url);
+        if (data.ok) _cache[key] = data;
+        return data;
     }
 
     // ── Poblar selects ────────────────────────────────────────
@@ -153,8 +168,8 @@
             el('modalProcesarLabel').textContent = 'Agregar acción al proyecto';
 
             const [personasData, contextosData] = await Promise.all([
-                post('/procesar/personas'),
-                post('/procesar/contextos'),
+                fetchCached('personas',  '/procesar/personas'),
+                fetchCached('contextos', '/procesar/contextos'),
             ]);
 
             if (personasData.ok) {
@@ -180,10 +195,10 @@
 
         } else {
             const [areasData, personasData, contextosData, proyectosData] = await Promise.all([
-                post('/procesar/areas'),
-                post('/procesar/personas'),
-                post('/procesar/contextos'),
-                post('/procesar/proyectos'),
+                fetchCached('areas',     '/procesar/areas'),
+                fetchCached('personas',  '/procesar/personas'),
+                fetchCached('contextos', '/procesar/contextos'),
+                fetchCached('proyectos', '/procesar/proyectos'),
             ]);
 
             if (areasData.ok) {
