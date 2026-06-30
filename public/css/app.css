@@ -801,6 +801,16 @@ hr.proc-separator {
         padding: 0 0 12px 0;
     }
 
+    .inbox-list {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .capture {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
     .item {
         flex-direction: column;
         align-items: flex-start;
