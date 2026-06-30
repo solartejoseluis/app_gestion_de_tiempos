@@ -1,178 +1,181 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with this repository.
 
 ## Proyecto
 
-Aplicación de gestión de tiempos basada en la metodología GTD (Getting Things Done) de David Allen.
-Stack: PHP 8.4 + MariaDB 11.4 + Apache 2.4 + Bootstrap 5 + DataTables. Arquitectura MVC. Entorno de desarrollo con Docker.
+Aplicación de gestión de tiempos personal basada en GTD (Getting Things Done) de David Allen.
+
+**Stack:** PHP 8.4 · MariaDB 11.4 · Apache 2.4 · Bootstrap 5 · Vanilla JS  
+**Arquitectura:** MVC sin framework · Docker Compose (desarrollo) · cPanel (producción)  
+**Producción:** https://gtd.aurusmind.com (cPanel aurusmin, DB: aurusmin_gtd)  
+**Repo:** github.com/solartejoseluis/app_gestion_de_tiempos  
+**Último commit estable:** 7980b7e
+
+---
 
 ## Comandos de desarrollo
 
 ```bash
-# Iniciar entorno
-docker compose up -d
-
-# Detener entorno
-docker compose down
-
-# Reconstruir imagen tras cambios en Dockerfile
-docker compose up -d --build
-
-# Acceder al contenedor PHP
-docker compose exec app bash
-
-# Ver logs de la app
-docker compose logs -f app
+docker compose up -d              # Iniciar entorno
+docker compose down               # Detener entorno
+docker compose up -d --build      # Reconstruir tras cambios en Dockerfile
+docker compose exec app bash      # Acceder al contenedor PHP
+docker compose logs -f app        # Ver logs
 ```
 
-**URLs:**
-- Aplicación: http://localhost
-- phpMyAdmin: http://localhost:8080
+URLs locales: App → http://localhost · phpMyAdmin → http://localhost:8080  
+Credenciales de prueba locales: admin@gtd.local / admin123
 
-**Setup inicial:**
-```bash
-cp .env.example .env
-# Editar .env con los valores del entorno local
-docker compose up -d --build
-```
-
-No hay framework de tests ni linter configurado actualmente.
+---
 
 ## Arquitectura
+HTTP request → public/.htaccess → public/index.php (front controller)
+→ app/Core/Router.php::dispatch()
+→ app/Controllers/XxxController
+→ app/Views/xxx/yyy.php (via $this->layout())
 
-### Flujo de una petición
+- **Autoloader** (sin Composer): busca en app/Controllers/, app/Models/, app/Core/ por nombre de clase.
+- **Router:** rutas en registerRoutes(), soporta {param}, emula PATCH/DELETE con _method.
+- **Controller base:** layout(), json(), error(), redirect(), requireAuth(), input()
+- **Model base:** $table, findAll(), findOne(), insert() protected, update() protected, softDelete() protected, query()
+- **SidebarCounters::get($userId)** se carga automáticamente en layout()
 
-```
-HTTP request
-  → public/.htaccess   (redirige todo a index.php)
-  → public/index.php   (front controller: carga .env, autoloader, config, sesión)
-  → app/Core/Router.php::dispatch()  (hace match de ruta y llama al controller)
-  → app/Controllers/XxxController    (lógica, llama al Model, devuelve view o json)
-  → app/Views/xxx/yyy.php            (HTML + PHP, recibe variables via extract())
-```
+---
 
-### Autoloader
+## Reglas de trabajo — NUNCA violar
 
-Sin Composer. El autoloader en `public/index.php` busca clases en este orden:
-`app/Controllers/`, `app/Models/`, `app/Core/`. Los nombres de clase deben coincidir exactamente con el nombre de archivo.
+- **Git:** NO hacer commits ni push automáticos. Solo sugerir mensaje.
+- **BD:** siempre PDO con prepared statements.
+- **Modelos:** insert/update/softDelete son protected — usar wrappers públicos.
+- **Bootstrap Modal:** siempre bootstrap.Modal.getOrCreateInstance(el) en el momento de uso.
+- **Eventos JS:** delegación sobre contenedor padre, nunca querySelector directo sobre ítems PHP.
+- **AJAX mutaciones:** POST. Vistas: GET.
+- **Vistas dashboard:** $this->layout('modulo.vista', $data)
+- **Credenciales:** nunca hardcodear, siempre $_ENV['VARIABLE']
+- **declare(strict_types=1)** en todos los archivos PHP
 
-### Router (`app/Core/Router.php`)
+---
 
-Rutas definidas en `registerRoutes()` (método privado). Soporta `{param}` en la ruta (convierte a regex). Los formularios HTML pueden emular PATCH/DELETE con `<input name="_method" value="PATCH">`.
+## Contexto GTD — dominio
 
-### Controller base (`app/Core/Controller.php`)
+- **8 tipos de ítem:** inbox, accion, proyecto_accion, delegada, incubada, referencia, completada, eliminada
+- **Contexto (@):** obligatorio en accion, proyecto_accion, delegada. NO aplica a proyectos.
+- **Calendario:** solo recibe ítems con tipo_tiempo = 'cita' (sagrado en GTD).
+- **Flujo procesamiento:** inbox → proyecto convierte el ítem original en 'completada'; las acciones hijas son proyecto_accion.
+- **Semana:** empieza el lunes. Revisión semanal debe llegar a inbox=0 antes de continuar.
 
-Métodos disponibles en todos los controllers:
-- `$this->view('modulo.archivo', $data)` — renderiza `app/Views/modulo/archivo.php` con `extract($data)`
-- `$this->json($data, $status)` — respuesta JSON con envelope `{ok, data}`
-- `$this->error($message, $status)` — respuesta JSON con envelope `{ok, error}`
-- `$this->redirect('/ruta')` — redirige usando `APP_URL`
-- `$this->requireAuth()` — redirige a `/login` si no hay `$_SESSION['usuario_id']`
-- `$this->input('key', $default)` — lee de `$_POST` o `$_GET`
+---
 
-### Model base (`app/Core/Model.php`)
+## Schema — tablas principales
 
-Cada Model define `protected string $table`. Métodos heredados:
-- `findAll(where?, params?)`, `findOne(where, params)` — SELECT
-- `insert(data)` → devuelve el `lastInsertId`
-- `update(id, data)` → UPDATE por `id`
-- `softDelete(id)` → pone `deleted_at = NOW()`
-- `query(sql, params)` → para consultas personalizadas
+- **items:** id, usuario_id, titulo, notas, tipo (enum 8 valores), tipo_tiempo (ninguno/dia/cita), area_id, contexto_id, proyecto_id, persona_id, fecha_accion, hora_inicio, hora_fin, bloque_id, fecha_cita, fecha_completada, duracion_minutos, energia, deleted_at
+- **proyectos:** id, usuario_id, nombre, resultado_deseado, area_id, estado (activo/completado/archivado), deleted_at
+- **areas:** id, usuario_id, nombre, descripcion, color, estado, deleted_at
+- **contextos:** id, usuario_id, nombre, color, deleted_at
+- **personas:** id, usuario_id, nombre, rol, deleted_at
+- **bloques_tiempo:** id, usuario_id, nombre, color, dias_semana (ej "1,2,3,4,5"), hora_inicio, hora_fin, fecha_inicio, fecha_fin, estado, deleted_at
+- **revisiones_semanales:** id, usuario_id, paso_actual, completada, foco_semana, deleted_at
 
-## Reglas de trabajo
+**Migraciones aplicadas:** 001 al 009 (incluyendo 009_items_agenda.sql)
 
-### Git — MUY IMPORTANTE
-- **NO hacer commits automáticamente**. El desarrollador los hace manualmente.
-- **NO hacer push**. El desarrollador decide cuándo.
-- Puedes sugerir el mensaje de commit pero nunca ejecutar `git commit` ni `git push`.
-- Formato de commit: `tipo(alcance): descripción`. Tipos: `feat`, `fix`, `refactor`, `style`, `docs`, `chore`, `test`.
+---
 
-### Base de datos
-- Usar **siempre PDO con prepared statements**. Nunca concatenar SQL con variables de usuario.
-- La conexión se obtiene con `Database::connection()` (singleton).
-- Las consultas que no encajan en los métodos base usan `$this->query($sql, $params)`.
+## Módulos — estado completo
 
-### Seguridad
-- Usar `$this->requireAuth()` en todos los controllers que requieren sesión activa.
-- Las contraseñas se hashean con `password_hash()` y se verifican con `password_verify()`.
+Todos los módulos están completos y en producción:
 
-### Estilo de código PHP
-- Siempre declarar `declare(strict_types=1)` al inicio de cada archivo.
-- Usar tipos en parámetros y retornos de funciones cuando sea posible.
-- Nombres de clases: PascalCase. Métodos y variables: camelCase.
+| Módulo | Ruta | Estado |
+|--------|------|--------|
+| Auth | /login, /logout | ✅ |
+| Inbox | /inbox | ✅ |
+| Procesamiento GTD | modal global | ✅ |
+| Próximas acciones | /acciones | ✅ |
+| Proyectos | /proyectos | ✅ |
+| Vista acciones de proyecto | /proyectos/{id}/acciones | ✅ |
+| En espera de | /espera | ✅ |
+| Algún día | /someday | ✅ |
+| Referencia | /referencia | ✅ |
+| Completadas | /completadas | ✅ |
+| Revisión semanal | /revision | ✅ |
+| Configuración | /config | ✅ |
+| Plantilla de bloques | /plantilla | ✅ |
+| Agenda semanal | /agenda | ✅ |
+| Agenda diaria | /agenda/dia | ✅ |
 
-### Frontend
-- Bootstrap 5 para layout. DataTables para tablas. jQuery/vanilla JS para interactividad.
-- Los modales de Bootstrap se controlan desde archivos JS en `public/js/`.
-- Los assets estáticos viven en `public/css/`, `public/js/`, `public/assets/`.
+---
 
-### Variables de entorno
-- Nunca hardcodear credenciales. Siempre usar `$_ENV['VARIABLE']`.
-- El archivo `.env` no se sube a Git.
+## Funcionalidades implementadas
 
-### Changelog
-- Sugerir la entrada del `CHANGELOG.md` para cada funcionalidad completada.
-- El desarrollador decide si la agrega y cuándo.
+- **Chip de fecha mejorado:** día de semana + hora (si cita) + días restantes/pasados — en todas las vistas
+- **Modo agenda en /acciones:** toggle lista/agenda por período temporal (hoy, mañana, esta semana, etc.)
+- **Notas inline:** autoguardado con debounce en /acciones, /proyectos/{id}/acciones, /espera, /someday
+- **Modal de edición unificado:** componente global en dashboard con 7 campos (título, área, contexto, proyecto, fecha, hora inicio, hora fin). JS: public/js/editar_accion.js, window.abrirModalEditar(config), evento accion:editada
+- **Agenda grid semanal:** 7 columnas × 32 slots (05:00–21:00, 48px/slot). Bloques de tiempo (amarillo), acciones (violeta), citas (azul), completadas (verde). Línea hora actual.
+- **Agenda vista día:** grid de 1 columna, creación desde slot (mini-modal), modal detalle con completar/editar
+- **Plantilla semanal:** CRUD de bloques de tiempo recurrentes con días, horario, color, vigencia
+- **Recuperar/eliminar completadas:** ítems y proyectos con confirmación
+- **Responsive móvil completo:** sidebar hamburguesa, todas las vistas adaptadas, agenda con scroll horizontal
+- **Caché de selects:** en procesamiento.js (_cache) y editar_accion.js (_cacheEdit)
+- **Ordenamiento por columnas:** client-side en tabla de áreas (config)
+- **Descripción de áreas:** campo editable inline con autoguardado
 
-## Contexto GTD
+---
 
-- Los ítems tienen 8 tipos: `inbox`, `accion`, `proyecto_accion`, `delegada`, `incubada`, `referencia`, `completada`, `eliminada`.
-- El campo `contexto` (`@`) es obligatorio para tipos: `accion`, `proyecto_accion`, `delegada`. **No aplica a proyectos.**
-- El calendario solo recibe ítems con `tipo_tiempo = 'cita'` (día y hora fijos).
-- El árbol de decisión GTD tiene 5 bifurcaciones (ver Especificación Técnica Funcional / Anexo A).
-- **Flujo GTD corregido:** cuando un ítem del inbox se convierte en proyecto, el ítem original queda con `tipo = 'completada'` (no `proyecto_accion`). Solo las acciones hijas del proyecto son `proyecto_accion`.
+## Componentes globales (en dashboard.php)
 
-## Estado de módulos
+- `app/Views/components/modal_procesamiento.php` + `public/js/procesamiento.js`
+- `app/Views/components/modal_editar_accion.php` + `public/js/editar_accion.js`
 
-### Completados (0–9)
+**Endpoints de selects reutilizables (POST):**
+- /procesar/areas · /procesar/contextos · /procesar/proyectos · /procesar/personas
 
-| #  | Ruta base      | Controller                  | Estado     |
-|----|----------------|-----------------------------|------------|
-| 0  | —              | —                           | Estructura MVC, Docker, Router, Core |
-| 1  | `/auth`        | `AuthController`            | Login / logout con sesión |
-| 2  | `/dashboard`   | —                           | Layout base con sidebar y badges |
-| 3  | `/inbox`       | `InboxController`           | Captura y listado con soft-delete |
-| 4  | `/inbox` (modal) | `ProcesamientoController` | Modal GTD completo (11 endpoints, cascada) |
-| 5  | `/acciones`    | `AccionesController`        | Próximas acciones, filtros, chips de contexto, completar |
-| 6  | `/proyectos`   | `ProyectosController`       | Proyectos activos/completados, colapso por área, stats en tiempo real |
-| 7  | `/espera`      | `EsperaController`          | En espera de, filtros, vencidos |
-| 8  | `/someday`     | `SomedayController`         | Algún día / tal vez |
-| 9  | `/referencia`  | `ReferenciaController`      | Material de referencia |
+---
 
-### Pendientes (10–12)
+## Agenda — fórmula de posicionamiento CSS
+top    = ((hora - 5) * 60 + minutos) / 30 * 48  px
+height = duracion_minutos / 30 * 48              px
 
-| #  | Ruta base   | Controller           | Función GTD              |
-|----|-------------|----------------------|--------------------------|
-| 10 | `/revision` | `RevisionController` | Revisión semanal         |
-| 11 | `/config`   | `ConfigController`   | Áreas, contextos, personas |
-| 12 | —           | —                    | Calendario (citas)       |
+Grid: CSS Grid con absolute positioning. 7 columnas × 32 slots × 48px = 1536px altura total.
 
-## Decisiones técnicas establecidas
+---
 
-### Flujo de procesamiento GTD
-- Ítem que se convierte en **proyecto**: el ítem original queda `tipo = 'completada'`; se crea un registro nuevo en la tabla `proyectos`.
-- El modal de procesamiento tiene **modo `agregar-accion`** cuando se abre desde la vista de proyectos (añade una `proyecto_accion` al proyecto padre, sin re-procesar el ítem).
-- El campo `contexto` **no aplica** a proyectos (solo a `accion`, `proyecto_accion`, `delegada`).
+## Patrones JS establecidos
 
-### Schema — columnas añadidas
-- `items`: `etiquetas` (JSON/TEXT)
-- `items`: `fecha_revision` (DATE)
-- `items`: `resultado_deseado` (TEXT)
-- `areas`: `color` (VARCHAR)
-- `contextos`: `color` (VARCHAR)
-- `personas`: `rol` (VARCHAR)
+- IIFE con 'use strict' en todos los archivos JS
+- Delegación de eventos sobre contenedor padre
+- fetchCached(key, url) para selects — evita requests repetidos
+- window.abrirModalEditar(config) — función global para editar cualquier acción
+- document.dispatchEvent(new CustomEvent('accion:editada', {detail})) — comunicación entre módulos
+- Scroll automático en agenda: scrollTop = top - clientHeight/3
 
-### Frontend / Bootstrap
-- `Bootstrap.Modal` **no se instancia al inicio del IIFE**. Usar siempre `bootstrap.Modal.getOrCreateInstance(el)` en el momento de uso para evitar dobles listeners.
-- Delegación de eventos **sobre el contenedor/lista padre** (no `querySelector` directo sobre ítems renderizados por PHP), para que funcione tras re-render dinámico.
+---
 
-## Patrones establecidos
+## Despliegue en producción
 
-| Patrón | Dónde aplica |
-|--------|--------------|
-| `$this->layout('modulo.vista', $data)` | Toda vista que use el dashboard con sidebar |
-| `SidebarCounters::get($userId)` | Llamada única dentro de `layout()` para los badges del sidebar |
-| Alias explícitos en todos los `JOIN` | Modelos con consultas multi-tabla (evitar columnas ambiguas) |
-| `POST` para acciones AJAX | Toda llamada fetch/XHR que muta estado |
-| `GET` para vistas | Todas las rutas que devuelven HTML |
+**Flujo local → producción:**
+1. Desarrollar y verificar en local (Docker)
+2. Commit manual por José Luis
+3. Exportar BD: `docker compose exec -T db mariadb-dump -u root -proot_secret gtd_db > export.sql`
+4. Comprimir: `tar --exclude='.git' --exclude='docker' -czf gtd_app.tar.gz app_gestion_de_tiempos`
+5. Subir via Administrador de archivos cPanel a `/home/aurusmin/gtd.aurusmind.com/`
+6. Importar BD en phpMyAdmin de cPanel
+7. Verificar .env en servidor (DB_HOST=localhost, APP_ENV=production)
+
+**.env producción:**
+APP_ENV=production
+APP_URL=https://gtd.aurusmind.com
+APP_DEBUG=false
+DB_HOST=localhost
+DB_NAME=aurusmin_gtd
+DB_USER=aurusmin_gtduser
+
+---
+
+## Próximas fases
+
+- **Fase 2:** React frontend + PHP REST API con JWT
+- **Fase 3:** Flutter móvil/escritorio (consume la misma API)
+- **UX pendiente:** sincronización con Google Calendar vía API
+
+No hacer commits ni push — solo José Luis hace commits manualmente.
