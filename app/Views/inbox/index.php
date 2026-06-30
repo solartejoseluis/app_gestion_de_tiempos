@@ -41,11 +41,15 @@ $total = count($items);
                                 data-bs-toggle="modal"
                                 data-bs-target="#modalProcesar"
                                 data-item-id="<?= $item['id'] ?>"
-                                data-item-texto="<?= htmlspecialchars($item['titulo'], ENT_QUOTES) ?>">Procesar</button>
+                                data-item-texto="<?= htmlspecialchars($item['titulo'], ENT_QUOTES) ?>"
+                                aria-label="Procesar"
+                                title="Procesar"><i class="bi bi-arrow-right-circle-fill"></i></button>
                         <button class="btn btn-sm btn-del"
                                 data-item-id="<?= $item['id'] ?>"
                                 data-bs-toggle="modal"
-                                data-bs-target="#modalBorrar">Borrar</button>
+                                data-bs-target="#modalBorrar"
+                                aria-label="Borrar"
+                                title="Borrar"><i class="bi bi-trash3"></i></button>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -58,10 +62,12 @@ $total = count($items);
             <input type="text"
                    id="capture-input"
                    class="form-control form-control-sm"
-                   placeholder="Capturar ítem..."
+                   placeholder="¿Qué tienes en mente?"
                    maxlength="255"
                    autocomplete="off">
-            <button type="submit" class="btn btn-sm btn-capture">Guardar</button>
+            <button type="submit" class="btn btn-sm btn-capture" aria-label="Guardar">
+                <i class="bi bi-send-fill"></i>
+            </button>
         </form>
     </div>
 

@@ -32,11 +32,15 @@
                         data-bs-toggle="modal"
                         data-bs-target="#modalProcesar"
                         data-item-id="${item.id}"
-                        data-item-texto="${escHtml(item.titulo)}">Procesar</button>
+                        data-item-texto="${escHtml(item.titulo)}"
+                        aria-label="Procesar"
+                        title="Procesar"><i class="bi bi-arrow-right-circle-fill"></i></button>
                 <button class="btn btn-sm btn-del"
                         data-item-id="${item.id}"
                         data-bs-toggle="modal"
-                        data-bs-target="#modalBorrar">Borrar</button>
+                        data-bs-target="#modalBorrar"
+                        aria-label="Borrar"
+                        title="Borrar"><i class="bi bi-trash3"></i></button>
             </div>`;
         return div;
     }
