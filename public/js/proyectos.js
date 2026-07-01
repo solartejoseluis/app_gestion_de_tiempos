@@ -20,9 +20,9 @@
 
     // ── Completar proyecto ────────────────────────────────────
     async function completarProyecto(id, btn) {
-        const orig    = btn.textContent.trim();
+        const orig    = btn.innerHTML;
         btn.disabled  = true;
-        btn.innerHTML = '<i class="bi bi-hourglass me-1"></i>...';
+        btn.innerHTML = '<i class="bi bi-hourglass"></i>';
 
         try {
             const data = await postProyecto('/proyectos/completar', id);

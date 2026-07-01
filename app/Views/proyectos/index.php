@@ -98,8 +98,9 @@
                             <!-- Acciones -->
                             <div class="d-flex flex-wrap gap-2">
                                 <a href="/proyectos/<?= $p['id'] ?>/acciones"
-                                   class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-list-check me-1"></i>Ver acciones
+                                   class="btn btn-sm btn-outline-secondary"
+                                   aria-label="Ver acciones">
+                                    <i class="bi bi-list-check"></i>
                                 </a>
                                 <button class="btn btn-sm btn-outline-primary btn-agregar-accion"
                                         data-bs-toggle="modal"
@@ -107,20 +108,24 @@
                                         data-modo="agregar-accion"
                                         data-proyecto-id="<?= $p['id'] ?>"
                                         data-proyecto-nombre="<?= htmlspecialchars($p['nombre']) ?>"
-                                        data-area-id="<?= $p['area_id'] ?? '' ?>">
-                                    <i class="bi bi-plus me-1"></i>Agregar acción
+                                        data-area-id="<?= $p['area_id'] ?? '' ?>"
+                                        aria-label="Agregar acción">
+                                    <i class="bi bi-plus-lg"></i>
                                 </button>
                                 <button class="btn btn-sm btn-pausar-proyecto <?= $pausa ? 'd-none' : '' ?>"
-                                        data-item-id="<?= $p['id'] ?>">
-                                    <i class="bi bi-pause me-1"></i>Pausar
+                                        data-item-id="<?= $p['id'] ?>"
+                                        aria-label="Pausar">
+                                    <i class="bi bi-pause-fill"></i>
                                 </button>
                                 <button class="btn btn-sm btn-reactivar-proyecto <?= $pausa ? '' : 'd-none' ?>"
-                                        data-item-id="<?= $p['id'] ?>">
-                                    <i class="bi bi-play me-1"></i>Reactivar
+                                        data-item-id="<?= $p['id'] ?>"
+                                        aria-label="Reactivar">
+                                    <i class="bi bi-play-fill"></i>
                                 </button>
                                 <button class="btn btn-sm btn-completar-proyecto"
-                                        data-item-id="<?= $p['id'] ?>">
-                                    <i class="bi bi-check-circle me-1"></i>Completar
+                                        data-item-id="<?= $p['id'] ?>"
+                                        aria-label="Completar">
+                                    <i class="bi bi-check-circle"></i>
                                 </button>
                             </div>
 
