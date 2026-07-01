@@ -6,10 +6,20 @@
             <h6 class="proyectos-title mb-0">Proyectos</h6>
             <span id="proyectos-counter" class="nav-badge badge-blue"><?= $totalActivos ?></span>
         </div>
-        <button id="btn-nuevo-proyecto" class="btn btn-sm btn-outline-primary"
-                data-bs-toggle="modal" data-bs-target="#modalNuevoProyecto">
-            <i class="bi bi-plus me-1"></i>Nuevo proyecto
-        </button>
+        <div class="d-flex align-items-center gap-2">
+            <?php if (!empty($grouped)): ?>
+                <button id="btn-toggle-areas" type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        aria-label="Expandir todas"
+                        data-estado="colapsado">
+                    <i class="bi bi-arrows-expand"></i>
+                </button>
+            <?php endif; ?>
+            <button id="btn-nuevo-proyecto" class="btn btn-sm btn-outline-primary"
+                    data-bs-toggle="modal" data-bs-target="#modalNuevoProyecto">
+                <i class="bi bi-plus me-1"></i>Nuevo proyecto
+            </button>
+        </div>
     </div>
 
     <!-- Lista agrupada -->
@@ -29,7 +39,7 @@
                      data-bs-toggle="collapse"
                      data-bs-target="#area-<?= $areaId ?>"
                      role="button"
-                     aria-expanded="true">
+                     aria-expanded="false">
                     <span>
                         <span class="proyecto-area-dot"
                               style="background:<?= htmlspecialchars($grupo['area_color']) ?>"></span>
@@ -39,7 +49,7 @@
                     <i class="bi bi-chevron-down proyecto-area-chevron"></i>
                 </div>
 
-                <div id="area-<?= $areaId ?>" class="collapse show">
+                <div id="area-<?= $areaId ?>" class="collapse proyecto-area-collapse">
 
                     <?php foreach ($grupo['proyectos'] as $p):
                         $total  = (int) $p['total_items'];
@@ -144,7 +154,8 @@
                 <div class="proyecto-area-header collapsed"
                      data-bs-toggle="collapse"
                      data-bs-target="#completados-collapse"
-                     role="button">
+                     role="button"
+                     aria-expanded="false">
                     <span>
                         <i class="bi bi-check-circle me-1"></i>
                         Proyectos completados
@@ -152,7 +163,7 @@
                     </span>
                     <i class="bi bi-chevron-down proyecto-area-chevron"></i>
                 </div>
-                <div id="completados-collapse" class="collapse">
+                <div id="completados-collapse" class="collapse proyecto-area-collapse">
                     <?php foreach ($proyectosCompletados as $p): ?>
                         <div class="proyecto-card proyecto-card-completada">
                             <div class="d-flex align-items-center justify-content-between mb-1">

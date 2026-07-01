@@ -170,4 +170,19 @@
         });
     });
 
+    // ── Colapsar/Expandir todas las áreas ──────────────────────
+    const btnToggleAreas = document.getElementById('btn-toggle-areas');
+
+    btnToggleAreas?.addEventListener('click', () => {
+        const expandir = btnToggleAreas.dataset.estado === 'colapsado';
+
+        document.querySelectorAll('.proyecto-area-collapse').forEach(target => {
+            bootstrap.Collapse.getOrCreateInstance(target, { toggle: false })[expandir ? 'show' : 'hide']();
+        });
+
+        btnToggleAreas.dataset.estado = expandir ? 'expandido' : 'colapsado';
+        btnToggleAreas.setAttribute('aria-label', expandir ? 'Colapsar todas' : 'Expandir todas');
+        btnToggleAreas.querySelector('i').className = expandir ? 'bi bi-arrows-collapse' : 'bi bi-arrows-expand';
+    });
+
 })();
