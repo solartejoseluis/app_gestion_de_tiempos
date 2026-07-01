@@ -86,8 +86,8 @@ $total  = count($items);
                 $diaSem  = $diasSem[$dt->format('D')];
                 $fechaStr = $diaSem . ' ' . $dt->format('j') . ' ' . $meses[$dt->format('M')];
 
-                if (!empty($item['fecha_cita']) && $item['tipo_tiempo'] === 'cita') {
-                    $horaStr = (new DateTime($item['fecha_cita']))->format('H:i');
+                if (!empty($item['hora_inicio']) && $item['tipo_tiempo'] === 'cita') {
+                    $horaStr = substr($item['hora_inicio'], 0, 5);
                 }
 
                 $hoyDt    = new DateTime($hoy);
@@ -113,7 +113,7 @@ $total  = count($items);
                  data-proyecto-id="<?= $item['proyecto_id'] ?? '' ?>"
                  data-fecha-accion="<?= $item['fecha_accion'] ?? '' ?>"
                  data-tipo-tiempo="<?= $item['tipo_tiempo'] ?? '' ?>"
-                 data-fecha-cita="<?= $item['fecha_cita'] ?? '' ?>">
+                 data-hora-inicio="<?= $item['hora_inicio'] ?? '' ?>">
 
                 <button class="btn-check-circular flex-shrink-0"
                         data-item-id="<?= $item['id'] ?>"

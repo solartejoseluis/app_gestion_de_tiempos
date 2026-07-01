@@ -235,14 +235,6 @@
                ' ' + MESES[d.getMonth()];
     }
 
-    function fmtHora(datetimeStr) {
-        if (!datetimeStr) return '';
-        var d = new Date(datetimeStr);
-        var h = String(d.getHours()).padStart(2, '0');
-        var m = String(d.getMinutes()).padStart(2, '0');
-        return h + ':' + m;
-    }
-
     function getPeriodo(fechaStr) {
         if (!fechaStr) return 'sin-fecha';
         var hoy   = new Date();
@@ -304,7 +296,7 @@
                 var titulo    = (el.querySelector('.item-text') || {}).textContent || '';
                 var fecha     = el.dataset.fechaAccion || '';
                 var tipoTiem  = el.dataset.tipoTiempo  || '';
-                var fechaCita = el.dataset.fechaCita   || '';
+                var horaInicio = el.dataset.horaInicio || '';
                 var ctx       = el.querySelector('.tag-ctx');
                 var area      = el.querySelector('.tag-area');
                 var proj      = el.querySelector('.tag-proj');
@@ -312,8 +304,8 @@
                 var fechaLabel = '';
                 if (fecha) {
                     fechaLabel = fmtFechaLarga(fecha);
-                    if (tipoTiem === 'cita' && fechaCita) {
-                        fechaLabel += ' · ⏰ ' + fmtHora(fechaCita);
+                    if (tipoTiem === 'cita' && horaInicio) {
+                        fechaLabel += ' · ⏰ ' + horaInicio.slice(0, 5);
                     }
                 }
 

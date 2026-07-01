@@ -93,8 +93,8 @@ $totalActivas = count($acciones);
                         $dt       = new DateTime($item['fecha_accion']);
                         $fechaStr = $dias[$dt->format('D')] . ' ' . $dt->format('j') . ' ' . $meses[$dt->format('M')];
 
-                        if (!empty($item['fecha_cita']) && $item['tipo_tiempo'] === 'cita') {
-                            $horaStr = (new DateTime($item['fecha_cita']))->format('H:i');
+                        if (!empty($item['hora_inicio']) && $item['tipo_tiempo'] === 'cita') {
+                            $horaStr = substr($item['hora_inicio'], 0, 5);
                         }
 
                         $hoyDt    = new DateTime($hoy);

@@ -114,19 +114,11 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
 
         <!-- Eventos con hora -->
         <?php foreach ($conHora as $item):
-            if ($item['tipo_tiempo'] === 'cita' && $item['fecha_cita']) {
-                $dtC     = new DateTime($item['fecha_cita']);
-                $horaIni = $dtC->format('H:i');
-                $durMin  = (int) ($item['duracion_minutos'] ?? 60);
-                $horaFin = (clone $dtC)->modify("+{$durMin} minutes")->format('H:i');
-                $clase   = 'tipo-cita';
-            } else {
-                $horaIni = substr($item['hora_inicio'] ?? '08:00', 0, 5);
-                $horaFin = $item['hora_fin']
-                    ? substr($item['hora_fin'], 0, 5)
-                    : date('H:i', strtotime($horaIni) + 3600);
-                $clase   = 'tipo-accion';
-            }
+            $horaIni = substr($item['hora_inicio'] ?? '08:00', 0, 5);
+            $horaFin = $item['hora_fin']
+                ? substr($item['hora_fin'], 0, 5)
+                : date('H:i', strtotime($horaIni) + 3600);
+            $clase   = $item['tipo_tiempo'] === 'cita' ? 'tipo-cita' : 'tipo-accion';
             $top    = $horaToPx($horaIni);
             $height = max($horaToPx($horaFin) - $top, $pxSlot);
         ?>
