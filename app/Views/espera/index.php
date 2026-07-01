@@ -177,30 +177,4 @@ $vencidos = count(array_filter($items, fn($i) => $i['fecha_accion'] !== null && 
 
 </div><!-- /.espera-wrapper -->
 
-<!-- Modal: Posponer -->
-<div class="modal fade" id="modalPosponer" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-1">
-                <h6 class="modal-title fw-semibold">Posponer seguimiento</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <label for="posponer-fecha" class="form-label small mb-1">
-                    Nueva fecha de seguimiento
-                </label>
-                <input id="posponer-fecha" type="date" class="form-control form-control-sm">
-                <div id="posponer-error" class="alert alert-danger d-none py-2 small mt-2"></div>
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-sm btn-outline-secondary"
-                        data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" id="btn-confirmar-posponer" class="btn btn-sm btn-primary">
-                    Confirmar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script src="/js/espera.js"></script>
