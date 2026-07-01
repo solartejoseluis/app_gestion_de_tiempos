@@ -109,6 +109,7 @@
             'proc-proyecto-form',
             'proc-a2-fecha',
             'proc-del-fecha', 'proc-prog-fecha',
+            'proc-del-hora-wrap', 'proc-prog-hora-wrap',
             'btn-completar-ahora'
         );
 
@@ -125,7 +126,9 @@
 
         // Limpiar inputs y textarea
         ['proc-titulo-input', 'proc-a3-etiquetas', 'proc-nueva-titulo',
-         'proc-a2-fecha', 'proc-del-fecha', 'proc-prog-fecha'].forEach(id => {
+         'proc-a2-fecha', 'proc-del-fecha', 'proc-prog-fecha',
+         'proc-del-hora-inicio', 'proc-del-hora-fin',
+         'proc-prog-hora-inicio', 'proc-prog-hora-fin'].forEach(id => {
             const e = el(id);
             if (e) e.value = '';
         });
@@ -138,12 +141,6 @@
         if (tituloText)  tituloText.textContent = '';
         if (tituloInput) tituloInput.classList.add('d-none');
         tituloText?.classList.remove('d-none');
-
-        // Restaurar tipo de fecha a date (por si se cambió a datetime-local)
-        ['proc-del-fecha', 'proc-prog-fecha'].forEach(id => {
-            const e = el(id);
-            if (e) e.type = 'date';
-        });
     }
 
     // ── Modal: abrir ──────────────────────────────────────────
@@ -362,8 +359,8 @@
         }
     });
 
-    // ── Seguimiento y programación → fecha dinámica ───────────
-    function configurarFecha(selectId, inputId) {
+    // ── Seguimiento y programación → fecha/hora dinámica ──────
+    function configurarFecha(selectId, inputId, horaWrapId, horaInicioId, horaFinId) {
         el(selectId).addEventListener('change', (e) => {
             const fechaEl = el(inputId);
             const val = e.target.value;
@@ -371,14 +368,22 @@
                 hide(inputId);
                 fechaEl.value = '';
             } else {
-                fechaEl.type = val === 'cita' ? 'datetime-local' : 'date';
                 show(inputId);
+            }
+            if (val === 'cita') {
+                show(horaWrapId);
+            } else {
+                hide(horaWrapId);
+                el(horaInicioId).value = '';
+                el(horaFinId).value    = '';
             }
         });
     }
 
-    configurarFecha('proc-del-seguimiento', 'proc-del-fecha');
-    configurarFecha('proc-prog-tiempo',     'proc-prog-fecha');
+    configurarFecha('proc-del-seguimiento', 'proc-del-fecha',
+        'proc-del-hora-wrap', 'proc-del-hora-inicio', 'proc-del-hora-fin');
+    configurarFecha('proc-prog-tiempo', 'proc-prog-fecha',
+        'proc-prog-hora-wrap', 'proc-prog-hora-inicio', 'proc-prog-hora-fin');
 
     // ── Error inline ──────────────────────────────────────────
     function mostrarError(msg) {
@@ -534,6 +539,8 @@
             proyecto_id: el('proc-del-proyecto').value    || '',
             tipo_tiempo: el('proc-del-seguimiento').value,
             fecha_accion: el('proc-del-fecha').value      || '',
+            hora_inicio: el('proc-del-hora-inicio').value || '',
+            hora_fin:    el('proc-del-hora-fin').value    || '',
         }, this);
     });
 
@@ -553,15 +560,19 @@
                 proyecto_id:  proyId ?? '',
                 area_id:      modoAreaId,
                 tipo_tiempo:  el('proc-prog-tiempo').value,
-                fecha_accion: el('proc-prog-fecha').value || '',
+                fecha_accion: el('proc-prog-fecha').value       || '',
+                hora_inicio:  el('proc-prog-hora-inicio').value || '',
+                hora_fin:     el('proc-prog-hora-fin').value    || '',
             }, this, () => recargarProyecto(proyId));
         } else {
             postAccion('/procesar/programar', {
                 id:           itemId,
                 contexto_id:  contexto,
-                proyecto_id:  el('proc-prog-proyecto').value || '',
+                proyecto_id:  el('proc-prog-proyecto').value    || '',
                 tipo_tiempo:  el('proc-prog-tiempo').value,
-                fecha_accion: el('proc-prog-fecha').value   || '',
+                fecha_accion: el('proc-prog-fecha').value       || '',
+                hora_inicio:  el('proc-prog-hora-inicio').value || '',
+                hora_fin:     el('proc-prog-hora-fin').value    || '',
             }, this);
         }
     });

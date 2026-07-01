@@ -55,6 +55,12 @@ class ProcesamientoController extends Controller
         return $v !== '' ? $v : null;
     }
 
+    private function horaONull(string $key): ?string
+    {
+        $v = trim($this->input($key, ''));
+        return $v !== '' ? $v : null;
+    }
+
     private function intONull(string $key): ?int
     {
         $v = (int) $this->input($key, 0);
@@ -211,12 +217,16 @@ class ProcesamientoController extends Controller
         $proyectoId = $this->intONull('proyecto_id');
         $tipoTiempo = $this->tipoTiempoValido($this->input('tipo_tiempo', 'ninguno'));
         $fechaAccion = $this->fechaONull('fecha_accion');
+        $horaInicio  = $this->horaONull('hora_inicio');
+        $horaFin     = $this->horaONull('hora_fin');
 
         $campos = [
             'tipo'        => $proyectoId !== null ? 'proyecto_accion' : 'accion',
             'contexto_id' => $contextoId,
             'tipo_tiempo' => $tipoTiempo,
             'fecha_accion' => $fechaAccion,
+            'hora_inicio' => $horaInicio,
+            'hora_fin'    => $horaFin,
         ];
 
         if ($proyectoId !== null) $campos['proyecto_id'] = $proyectoId;
@@ -240,6 +250,8 @@ class ProcesamientoController extends Controller
         $proyectoId  = $this->intONull('proyecto_id');
         $tipoTiempo  = $this->tipoTiempoValido($this->input('tipo_tiempo', 'ninguno'));
         $fechaAccion = $this->fechaONull('fecha_accion');
+        $horaInicio  = $this->horaONull('hora_inicio');
+        $horaFin     = $this->horaONull('hora_fin');
 
         $campos = [
             'tipo'             => 'delegada',
@@ -247,6 +259,8 @@ class ProcesamientoController extends Controller
             'contexto_id'      => $contextoId,
             'tipo_tiempo'      => $tipoTiempo,
             'fecha_accion'     => $fechaAccion,
+            'hora_inicio'      => $horaInicio,
+            'hora_fin'         => $horaFin,
             'fecha_delegacion' => date('Y-m-d'),
         ];
 
@@ -274,6 +288,8 @@ class ProcesamientoController extends Controller
         $areaId      = $this->intONull('area_id');
         $tipoTiempo  = $this->tipoTiempoValido($this->input('tipo_tiempo', 'ninguno'));
         $fechaAccion = $this->fechaONull('fecha_accion');
+        $horaInicio  = $this->horaONull('hora_inicio');
+        $horaFin     = $this->horaONull('hora_fin');
         $personaId   = $this->intONull('persona_id');
 
         $datos = [
@@ -287,6 +303,8 @@ class ProcesamientoController extends Controller
         if ($proyectoId !== null)  $datos['proyecto_id']  = $proyectoId;
         if ($areaId !== null)      $datos['area_id']       = $areaId;
         if ($fechaAccion !== null) $datos['fecha_accion']  = $fechaAccion;
+        if ($horaInicio !== null)  $datos['hora_inicio']   = $horaInicio;
+        if ($horaFin !== null)     $datos['hora_fin']      = $horaFin;
         if ($personaId !== null)   $datos['persona_id']    = $personaId;
 
         $cols   = implode(', ', array_keys($datos));

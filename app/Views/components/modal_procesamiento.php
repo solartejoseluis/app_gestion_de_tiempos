@@ -235,9 +235,25 @@
                             <option value="cita">Cita con hora</option>
                         </select>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-2">
                         <input id="proc-del-fecha" type="date"
                                class="form-control form-control-sm d-none">
+                    </div>
+                    <div id="proc-del-hora-wrap" class="row g-2 mb-3 d-none">
+                        <div class="col-6">
+                            <label for="proc-del-hora-inicio" class="form-label small mb-1">
+                                Hora inicio
+                            </label>
+                            <input id="proc-del-hora-inicio" type="time"
+                                   class="form-control form-control-sm">
+                        </div>
+                        <div class="col-6">
+                            <label for="proc-del-hora-fin" class="form-label small mb-1">
+                                Hora fin
+                            </label>
+                            <input id="proc-del-hora-fin" type="time"
+                                   class="form-control form-control-sm">
+                        </div>
                     </div>
                     <button type="button" id="btn-guardar-delegar"
                             class="btn btn-sm btn-proc-bifurcacion w-100">
@@ -273,9 +289,25 @@
                             <option value="cita">Cita con día y hora</option>
                         </select>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-2">
                         <input id="proc-prog-fecha" type="date"
                                class="form-control form-control-sm d-none">
+                    </div>
+                    <div id="proc-prog-hora-wrap" class="row g-2 mb-3 d-none">
+                        <div class="col-6">
+                            <label for="proc-prog-hora-inicio" class="form-label small mb-1">
+                                Hora inicio
+                            </label>
+                            <input id="proc-prog-hora-inicio" type="time"
+                                   class="form-control form-control-sm">
+                        </div>
+                        <div class="col-6">
+                            <label for="proc-prog-hora-fin" class="form-label small mb-1">
+                                Hora fin
+                            </label>
+                            <input id="proc-prog-hora-fin" type="time"
+                                   class="form-control form-control-sm">
+                        </div>
                     </div>
                     <button type="button" id="btn-guardar-programar"
                             class="btn btn-sm btn-proc-bifurcacion w-100">
