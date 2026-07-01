@@ -28,6 +28,8 @@
 <script src="/js/procesamiento.js"></script>
 <?php require BASE_PATH . '/app/Views/components/modal_editar_accion.php'; ?>
 <script src="/js/editar_accion.js"></script>
+<?php require BASE_PATH . '/app/Views/components/modal_confirmar.php'; ?>
+<script src="/js/confirmar.js"></script>
 <script>
 (function () {
     var toggle  = document.getElementById('sidebar-toggle');

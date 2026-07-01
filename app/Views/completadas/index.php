@@ -319,56 +319,9 @@ $filtrosActuales = array_filter([
 
 </div>
 
-<!-- Modal de confirmación ──────────────────────────── -->
-<div class="modal fade" id="modalConfirmarEliminar" tabindex="-1">
-    <div class="modal-dialog modal-sm modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-1">
-                <h6 class="modal-title fw-semibold">¿Eliminar permanentemente?</h6>
-                <button type="button" class="btn-close btn-sm"
-                        data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body pt-0">
-                <p class="text-muted small mb-0" id="modal-eliminar-texto">
-                    Esta acción no se puede deshacer.
-                </p>
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-sm btn-outline-secondary"
-                        data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-sm btn-danger"
-                        id="btn-confirmar-eliminar">Eliminar</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
 (function () {
     'use strict';
-
-    var modalEl   = document.getElementById('modalConfirmarEliminar');
-    var btnConf   = document.getElementById('btn-confirmar-eliminar');
-    var textoEl   = document.getElementById('modal-eliminar-texto');
-    var pendingFn = null;
-
-    function confirmarEliminar(texto, fn) {
-        if (textoEl) textoEl.textContent = texto;
-        pendingFn = fn;
-        bootstrap.Modal.getOrCreateInstance(modalEl).show();
-    }
-
-    if (btnConf) {
-        btnConf.addEventListener('click', function () {
-            bootstrap.Modal.getInstance(modalEl)?.hide();
-            if (pendingFn) { pendingFn(); pendingFn = null; }
-        });
-        if (modalEl) {
-            modalEl.addEventListener('hidden.bs.modal', function () {
-                pendingFn = null;
-            });
-        }
-    }
 
     function fetchPost(url, method) {
         return fetch(url, {
@@ -407,7 +360,7 @@ $filtrosActuales = array_filter([
     document.querySelectorAll('.btn-eliminar-item').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var id = btn.dataset.id;
-            confirmarEliminar(
+            window.confirmarAccion(
                 'Se eliminará esta acción permanentemente. ¿Continuar?',
                 function () {
                     btn.disabled = true;
@@ -450,7 +403,7 @@ $filtrosActuales = array_filter([
     document.querySelectorAll('.btn-eliminar-proyecto').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var id = btn.dataset.id;
-            confirmarEliminar(
+            window.confirmarAccion(
                 'Se eliminará el proyecto y todas sus tareas permanentemente. ¿Continuar?',
                 function () {
                     btn.disabled = true;
