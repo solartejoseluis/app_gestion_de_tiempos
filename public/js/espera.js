@@ -130,6 +130,40 @@
         }
     });
 
+    // ── Editar ítem (modal unificado) ──────────────────────────
+    lista.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-edit');
+        if (!btn || !window.abrirModalEditar) return;
+        window.abrirModalEditar({
+            id:         btn.dataset.itemId,
+            titulo:     btn.dataset.titulo      || '',
+            areaId:     btn.dataset.areaId      || '',
+            contextoId: btn.dataset.contextoId  || '',
+            proyectoId: btn.dataset.proyectoId  || '',
+            fecha:      btn.dataset.fecha        || '',
+            horaInicio: btn.dataset.horaInicio   || '',
+            horaFin:    btn.dataset.horaFin      || '',
+        });
+    });
+
+    document.addEventListener('accion:editada', (e) => {
+        const d    = e.detail;
+        const fila = lista.querySelector(`.espera-item[data-id="${d.id}"]`);
+        if (!fila) return;
+        const textoEl = fila.querySelector('.item-text');
+        if (textoEl) textoEl.textContent = d.titulo;
+        const btnEdit = fila.querySelector('.btn-edit');
+        if (btnEdit) {
+            btnEdit.dataset.titulo      = d.titulo;
+            btnEdit.dataset.areaId      = d.areaId      || '';
+            btnEdit.dataset.contextoId  = d.contextoId  || '';
+            btnEdit.dataset.proyectoId  = d.proyectoId  || '';
+            btnEdit.dataset.fecha       = d.fecha        || '';
+            btnEdit.dataset.horaInicio  = d.horaInicio   || '';
+            btnEdit.dataset.horaFin     = d.horaFin      || '';
+        }
+    });
+
     // ── Confirmar posponer ────────────────────────────────────
     document.getElementById('btn-confirmar-posponer')?.addEventListener('click', async function () {
         const fecha   = inputFecha?.value ?? '';

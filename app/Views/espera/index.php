@@ -157,10 +157,16 @@ $vencidos = count(array_filter($items, fn($i) => $i['fecha_accion'] !== null && 
                             data-item-id="<?= $item['id'] ?>">
                         <i class="bi bi-check me-1"></i>Recibido
                     </button>
-                    <button class="btn btn-sm btn-edit btn-posponer"
+                    <button class="btn btn-sm btn-edit"
                             data-item-id="<?= $item['id'] ?>"
-                            data-fecha="<?= $item['fecha_accion'] ?? '' ?>">
-                        Posponer
+                            data-titulo="<?= htmlspecialchars($item['titulo'], ENT_QUOTES) ?>"
+                            data-area-id="<?= $item['area_id'] ?? '' ?>"
+                            data-contexto-id="<?= $item['contexto_id'] ?? '' ?>"
+                            data-proyecto-id="<?= $item['proyecto_id'] ?? '' ?>"
+                            data-fecha="<?= $item['fecha_accion'] ?? '' ?>"
+                            data-hora-inicio="<?= $item['hora_inicio'] ?? '' ?>"
+                            data-hora-fin="<?= $item['hora_fin'] ?? '' ?>">
+                        <i class="bi bi-pencil me-1"></i>Editar
                     </button>
                 </div>
 
