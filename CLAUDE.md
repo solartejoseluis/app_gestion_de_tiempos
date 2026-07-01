@@ -10,7 +10,7 @@ Aplicación de gestión de tiempos personal basada en GTD (Getting Things Done) 
 **Arquitectura:** MVC sin framework · Docker Compose (desarrollo) · cPanel (producción)  
 **Producción:** https://gtd.aurusmind.com (cPanel aurusmin, DB: aurusmin_gtd)  
 **Repo:** github.com/solartejoseluis/app_gestion_de_tiempos  
-**Último commit estable:** b1ead9a
+**Último commit estable:** b72d8a3
 
 ---
 
@@ -111,7 +111,7 @@ Todos los módulos están completos y en producción:
 - **Chip de fecha mejorado:** día de semana + hora (si cita) + días restantes/pasados — en todas las vistas. Fuente de la hora: `hora_inicio` (columna TIME), no `fecha_cita`.
 - **Modo agenda en /acciones:** toggle lista/agenda por período temporal (hoy, mañana, esta semana, etc.). Lee `data-hora-inicio` del ítem para el label de hora.
 - **Notas inline:** autoguardado con debounce en /acciones, /proyectos/{id}/acciones, /espera, /someday
-- **Modal de edición unificado:** componente global en dashboard con 7 campos (título, área, contexto, proyecto, fecha, hora inicio, hora fin). JS: public/js/editar_accion.js, window.abrirModalEditar(config), evento accion:editada
+- **Modal de edición unificado:** componente global en dashboard con 7 campos (título, área, contexto, proyecto, fecha, hora inicio, hora fin). JS: public/js/editar_accion.js, window.abrirModalEditar(config), evento accion:editada. Usado en /acciones, /proyectos/{id}/acciones y /espera (botón "Editar" en cada vista). Limitación conocida: el listener de accion:editada solo refresca título y dataset del botón — el chip visual de fecha/hora no se actualiza sin recargar la página (el dato en BD sí queda correcto de inmediato).
 - **Fecha + hora en modal de procesamiento:** los flujos Programar y Delegar (modal_procesamiento.php) capturan fecha (`type="date"`) y hora inicio/fin (`type="time"`) como campos separados, mismo patrón que el modal de edición. `ProcesamientoController` usa el helper privado `horaONull()` (mismo patrón que `fechaONull()`) en `programar()`, `delegar()` y `nuevaAccion()`.
 - **Captura en /inbox (mobile):** barra de captura `position: fixed` en la parte inferior, siempre visible. Botón de guardar como ícono (`bi-send-fill`, `aria-label="Guardar"`). Placeholder "¿Qué tienes en mente?". Botones Procesar/Borrar de cada ficha como íconos con `aria-label`/`title` (vista PHP y `crearElemento()` en inbox.js). Márgenes laterales igualados a /acciones (24px totales).
 - **Agenda grid semanal:** 7 columnas × 32 slots (05:00–21:00, 48px/slot). Bloques de tiempo (amarillo), acciones (violeta), citas (azul), completadas (verde). Línea hora actual.
@@ -177,11 +177,17 @@ DB_USER=aurusmin_gtduser
 
 ---
 
+## Deuda técnica
+
+- **Código huérfano en /espera:** el modal `#modalPosponer` (app/Views/espera/index.php) y su JS asociado en public/js/espera.js (flujo viejo de "posponer", pre modal unificado) quedaron sin ningún botón que los dispare desde que /espera pasó a usar `abrirModalEditar()`. Pendiente eliminarlos en una fase de limpieza aparte.
+- **`EsperaController::posponer()` (POST /espera/posponer) NO se debe eliminar** aunque el modal de /espera ya no lo use — lo sigue usando revision/paso3_espera.php (paso 3 de revisión semanal) de forma independiente, con su propia UI inline (revision.js, clase btn-posponer-espera).
+
+---
+
 ## Próximas fases
 
 - **Fase 2:** React frontend + PHP REST API con JWT
 - **Fase 3:** Flutter móvil/escritorio (consume la misma API)
 - **UX pendiente:** sincronización con Google Calendar vía API
-- **UX pendiente:** el modal "Posponer" de /espera solo edita `fecha_accion` (un único `type="date"`) — no expone `hora_inicio`/`hora_fin`. El dato se guarda bien si viene de otro flujo (delegar), pero no hay forma de verlo/editarlo desde /espera. Decidir: (a) agregar campos de hora al modal Posponer, o (b) conectar /espera al modal de edición unificado (`abrirModalEditar`) como ya hacen /acciones y /proyectos/{id}/acciones.
 
 No hacer commits ni push — solo José Luis hace commits manualmente.
