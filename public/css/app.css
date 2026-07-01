@@ -804,11 +804,19 @@ hr.proc-separator {
     .inbox-list {
         padding-left: 12px;
         padding-right: 12px;
+        padding-bottom: 70px;
     }
 
     .capture {
-        padding-left: 12px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        padding-top: 12px;
         padding-right: 12px;
+        padding-bottom: 12px;
+        padding-left: 12px;
     }
 
     .item {
