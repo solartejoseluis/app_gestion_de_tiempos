@@ -10,7 +10,7 @@ Aplicación de gestión de tiempos personal basada en GTD (Getting Things Done) 
 **Arquitectura:** MVC sin framework · Docker Compose (desarrollo) · cPanel (producción)  
 **Producción:** https://gtd.aurusmind.com (cPanel aurusmin, DB: aurusmin_gtd)  
 **Repo:** github.com/solartejoseluis/app_gestion_de_tiempos  
-**Último commit estable:** 7980b7e
+**Último commit estable:** b1ead9a
 
 ---
 
@@ -70,6 +70,7 @@ HTTP request → public/.htaccess → public/index.php (front controller)
 ## Schema — tablas principales
 
 - **items:** id, usuario_id, titulo, notas, tipo (enum 8 valores), tipo_tiempo (ninguno/dia/cita), area_id, contexto_id, proyecto_id, persona_id, fecha_accion, hora_inicio, hora_fin, bloque_id, fecha_cita, fecha_completada, duracion_minutos, energia, deleted_at
+  - ⚠️ `fecha_cita` y `duracion_minutos` son columnas legacy **sin uso activo en el código** — ningún controlador las escribe desde la migración 009 (reemplazadas por `hora_inicio`/`hora_fin`). No eliminadas del schema, pero no usarlas en código nuevo.
 - **proyectos:** id, usuario_id, nombre, resultado_deseado, area_id, estado (activo/completado/archivado), deleted_at
 - **areas:** id, usuario_id, nombre, descripcion, color, estado, deleted_at
 - **contextos:** id, usuario_id, nombre, color, deleted_at
@@ -107,10 +108,12 @@ Todos los módulos están completos y en producción:
 
 ## Funcionalidades implementadas
 
-- **Chip de fecha mejorado:** día de semana + hora (si cita) + días restantes/pasados — en todas las vistas
-- **Modo agenda en /acciones:** toggle lista/agenda por período temporal (hoy, mañana, esta semana, etc.)
+- **Chip de fecha mejorado:** día de semana + hora (si cita) + días restantes/pasados — en todas las vistas. Fuente de la hora: `hora_inicio` (columna TIME), no `fecha_cita`.
+- **Modo agenda en /acciones:** toggle lista/agenda por período temporal (hoy, mañana, esta semana, etc.). Lee `data-hora-inicio` del ítem para el label de hora.
 - **Notas inline:** autoguardado con debounce en /acciones, /proyectos/{id}/acciones, /espera, /someday
 - **Modal de edición unificado:** componente global en dashboard con 7 campos (título, área, contexto, proyecto, fecha, hora inicio, hora fin). JS: public/js/editar_accion.js, window.abrirModalEditar(config), evento accion:editada
+- **Fecha + hora en modal de procesamiento:** los flujos Programar y Delegar (modal_procesamiento.php) capturan fecha (`type="date"`) y hora inicio/fin (`type="time"`) como campos separados, mismo patrón que el modal de edición. `ProcesamientoController` usa el helper privado `horaONull()` (mismo patrón que `fechaONull()`) en `programar()`, `delegar()` y `nuevaAccion()`.
+- **Captura en /inbox (mobile):** barra de captura `position: fixed` en la parte inferior, siempre visible. Botón de guardar como ícono (`bi-send-fill`, `aria-label="Guardar"`). Placeholder "¿Qué tienes en mente?". Botones Procesar/Borrar de cada ficha como íconos con `aria-label`/`title` (vista PHP y `crearElemento()` en inbox.js). Márgenes laterales igualados a /acciones (24px totales).
 - **Agenda grid semanal:** 7 columnas × 32 slots (05:00–21:00, 48px/slot). Bloques de tiempo (amarillo), acciones (violeta), citas (azul), completadas (verde). Línea hora actual.
 - **Agenda vista día:** grid de 1 columna, creación desde slot (mini-modal), modal detalle con completar/editar
 - **Plantilla semanal:** CRUD de bloques de tiempo recurrentes con días, horario, color, vigencia
@@ -133,10 +136,12 @@ Todos los módulos están completos y en producción:
 ---
 
 ## Agenda — fórmula de posicionamiento CSS
-top    = ((hora - 5) * 60 + minutos) / 30 * 48  px
-height = duracion_minutos / 30 * 48              px
+top    = ((hora - 5) * 60 + minutos) / 30 * 48                 px
+height = ((hora_fin - hora_inicio) en minutos) / 30 * 48       px
 
 Grid: CSS Grid con absolute positioning. 7 columnas × 32 slots × 48px = 1536px altura total.
+
+La clase CSS del evento (`tipo-cita` azul vs `tipo-accion` violeta) se determina directamente por `tipo_tiempo === 'cita'` — no depende de `fecha_cita` ni `duracion_minutos` (columnas legacy, ver Schema).
 
 ---
 
@@ -177,5 +182,6 @@ DB_USER=aurusmin_gtduser
 - **Fase 2:** React frontend + PHP REST API con JWT
 - **Fase 3:** Flutter móvil/escritorio (consume la misma API)
 - **UX pendiente:** sincronización con Google Calendar vía API
+- **UX pendiente:** el modal "Posponer" de /espera solo edita `fecha_accion` (un único `type="date"`) — no expone `hora_inicio`/`hora_fin`. El dato se guarda bien si viene de otro flujo (delegar), pero no hay forma de verlo/editarlo desde /espera. Decidir: (a) agregar campos de hora al modal Posponer, o (b) conectar /espera al modal de edición unificado (`abrirModalEditar`) como ya hacen /acciones y /proyectos/{id}/acciones.
 
 No hacer commits ni push — solo José Luis hace commits manualmente.
