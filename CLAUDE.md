@@ -10,7 +10,7 @@ Aplicación de gestión de tiempos personal basada en GTD (Getting Things Done) 
 **Arquitectura:** MVC sin framework · Docker Compose (desarrollo) · cPanel (producción)  
 **Producción:** https://gtd.aurusmind.com (cPanel aurusmin, DB: aurusmin_gtd)  
 **Repo:** github.com/solartejoseluis/app_gestion_de_tiempos  
-**Último commit estable:** b72d8a3
+**Último commit estable:** a9ee135
 
 ---
 
@@ -54,6 +54,7 @@ HTTP request → public/.htaccess → public/index.php (front controller)
 - **Vistas dashboard:** $this->layout('modulo.vista', $data)
 - **Credenciales:** nunca hardcodear, siempre $_ENV['VARIABLE']
 - **declare(strict_types=1)** en todos los archivos PHP
+- **Endpoints compartidos:** `EsperaController::posponer()` (POST /espera/posponer) parece no usarse desde /espera (su modal fue eliminado) pero lo consume revision/paso3_espera.php de forma independiente (paso 3 de revisión semanal, revision.js, clase btn-posponer-espera) — no eliminar.
 
 ---
 
@@ -174,13 +175,6 @@ APP_DEBUG=false
 DB_HOST=localhost
 DB_NAME=aurusmin_gtd
 DB_USER=aurusmin_gtduser
-
----
-
-## Deuda técnica
-
-- **Código huérfano en /espera:** el modal `#modalPosponer` (app/Views/espera/index.php) y su JS asociado en public/js/espera.js (flujo viejo de "posponer", pre modal unificado) quedaron sin ningún botón que los dispare desde que /espera pasó a usar `abrirModalEditar()`. Pendiente eliminarlos en una fase de limpieza aparte.
-- **`EsperaController::posponer()` (POST /espera/posponer) NO se debe eliminar** aunque el modal de /espera ya no lo use — lo sigue usando revision/paso3_espera.php (paso 3 de revisión semanal) de forma independiente, con su propia UI inline (revision.js, clase btn-posponer-espera).
 
 ---
 
