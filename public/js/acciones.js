@@ -1,4 +1,5 @@
 (() => {
+    const wrapper = document.querySelector('.acciones-wrapper');
     const lista   = document.getElementById('acciones-lista');
     const counter = document.getElementById('acciones-counter');
     const empty   = document.getElementById('acciones-empty');
@@ -163,6 +164,7 @@
             const data = await res.json();
             if (data.ok) {
                 lista.querySelector(`.acciones-item[data-id="${id}"]`)?.remove();
+                document.querySelector(`#agenda-vista .agenda-item[data-id="${id}"]`)?.remove();
                 actualizarContador();
 
                 // Actualizar badge sidebar
@@ -182,9 +184,12 @@
         }
     }
 
-    // ── Delegación de clicks (btn-done y checkbox) ────────────
-    lista.addEventListener('click', (e) => {
-        const btn = e.target.closest('.btn-done, .btn-check-circular');
+    // ── Completar (checkbox circular) ─────────────────────────
+    // Sobre .acciones-wrapper (no solo #acciones-lista) para que también
+    // funcione en los ítems clonados del modo agenda (#agenda-vista) —
+    // ambos modos usan el mismo .btn-check-circular y el mismo flujo.
+    wrapper.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-check-circular');
         if (btn) {
             const id = btn.dataset.itemId;
             if (id) completarAccion(id, btn);
@@ -192,7 +197,7 @@
     });
 
     // ── Editar acción ─────────────────────────────────────────
-    lista.addEventListener('click', function (e) {
+    wrapper.addEventListener('click', function (e) {
         var btn = e.target.closest('.btn-edit');
         if (!btn || !window.abrirModalEditar) return;
         window.abrirModalEditar({
@@ -207,36 +212,54 @@
         });
     });
 
+    function sincronizarBtnEdit(btnEdit, d) {
+        if (!btnEdit) return;
+        btnEdit.dataset.titulo      = d.titulo;
+        btnEdit.dataset.areaId      = d.areaId      || '';
+        btnEdit.dataset.contextoId  = d.contextoId  || '';
+        btnEdit.dataset.proyectoId  = d.proyectoId  || '';
+        btnEdit.dataset.fecha       = d.fecha        || '';
+        btnEdit.dataset.horaInicio  = d.horaInicio   || '';
+        btnEdit.dataset.horaFin     = d.horaFin      || '';
+    }
+
     document.addEventListener('accion:editada', function (e) {
-        var d    = e.detail;
+        var d = e.detail;
+
+        // DOM de lista
         var fila = lista.querySelector('.acciones-item[data-id="' + d.id + '"]');
-        if (!fila) return;
-        var textoEl = fila.querySelector('.item-text');
-        if (textoEl) textoEl.textContent = d.titulo;
+        if (fila) {
+            var textoEl = fila.querySelector('.item-text');
+            if (textoEl) textoEl.textContent = d.titulo;
 
-        // Mantener sincronizados los data-* usados por filtros/orden/modo agenda
-        fila.dataset.titulo      = d.titulo;
-        fila.dataset.areaId      = d.areaId      || '';
-        fila.dataset.contextoId  = d.contextoId  || '';
-        fila.dataset.proyectoId  = d.proyectoId  || '';
-        fila.dataset.fechaAccion = d.fecha        || '';
-        fila.dataset.horaInicio  = d.horaInicio   || '';
+            // Mantener sincronizados los data-* usados por filtros/orden/modo agenda
+            fila.dataset.titulo      = d.titulo;
+            fila.dataset.areaId      = d.areaId      || '';
+            fila.dataset.contextoId  = d.contextoId  || '';
+            fila.dataset.proyectoId  = d.proyectoId  || '';
+            fila.dataset.fechaAccion = d.fecha        || '';
+            fila.dataset.horaInicio  = d.horaInicio   || '';
 
-        var btnEdit = fila.querySelector('.btn-edit');
-        if (btnEdit) {
-            btnEdit.dataset.titulo      = d.titulo;
-            btnEdit.dataset.areaId      = d.areaId      || '';
-            btnEdit.dataset.contextoId  = d.contextoId  || '';
-            btnEdit.dataset.proyectoId  = d.proyectoId  || '';
-            btnEdit.dataset.fecha       = d.fecha        || '';
-            btnEdit.dataset.horaInicio  = d.horaInicio   || '';
-            btnEdit.dataset.horaFin     = d.horaFin      || '';
+            sincronizarBtnEdit(fila.querySelector('.btn-edit'), d);
+        }
+
+        // DOM de agenda (si el ítem está actualmente renderizado ahí)
+        var agendaItem = document.querySelector('#agenda-vista .agenda-item[data-id="' + d.id + '"]');
+        if (agendaItem) {
+            var agendaTexto = agendaItem.querySelector('.agenda-item-titulo');
+            if (agendaTexto) agendaTexto.textContent = d.titulo;
+
+            sincronizarBtnEdit(agendaItem.querySelector('.btn-edit'), d);
         }
     });
 
     document.addEventListener('accion:eliminada', function (e) {
         var fila = lista.querySelector('.acciones-item[data-id="' + e.detail.id + '"]');
         if (fila) fila.remove();
+
+        var agendaItem = document.querySelector('#agenda-vista .agenda-item[data-id="' + e.detail.id + '"]');
+        if (agendaItem) agendaItem.remove();
+
         actualizarContador();
 
         var badge = document.getElementById('sidebar-acciones-badge');
@@ -253,17 +276,19 @@
 (function () {
     'use strict';
 
-    var lista = document.getElementById('acciones-lista');
-    if (!lista) return;
+    // Sobre .acciones-wrapper (no solo #acciones-lista) para que también
+    // funcione en las notas clonadas del modo agenda (#agenda-vista).
+    var wrapperNotas = document.querySelector('.acciones-wrapper');
+    if (!wrapperNotas) return;
 
     var debNotas = {};
 
     // Toggle "Agregar notas"
-    lista.addEventListener('click', function (e) {
+    wrapperNotas.addEventListener('click', function (e) {
         var btn = e.target.closest('.btn-toggle-notas');
         if (!btn) return;
-        var wrapper   = btn.closest('.notas-wrapper');
-        var expandida = wrapper ? wrapper.querySelector('.notas-expandida') : null;
+        var notasWrapper = btn.closest('.notas-wrapper');
+        var expandida = notasWrapper ? notasWrapper.querySelector('.notas-expandida') : null;
         var textarea  = expandida ? expandida.querySelector('.notas-inline') : null;
         if (!expandida) return;
         btn.classList.add('d-none');
@@ -272,7 +297,7 @@
     });
 
     // Autoguardado con debounce 800 ms
-    lista.addEventListener('input', function (e) {
+    wrapperNotas.addEventListener('input', function (e) {
         var ta = e.target.closest('.notas-inline');
         if (!ta) return;
         var id         = ta.dataset.id;
@@ -325,18 +350,31 @@
                ' ' + MESES[d.getMonth()];
     }
 
-    function getPeriodo(fechaStr) {
-        if (!fechaStr) return 'sin-fecha';
+    function diffDias(fechaStr) {
         var hoy   = new Date();
         hoy.setHours(0, 0, 0, 0);
         var fecha = new Date(fechaStr + 'T00:00:00');
-        var diff  = Math.round((fecha - hoy) / (1000 * 60 * 60 * 24));
+        return Math.round((fecha - hoy) / (1000 * 60 * 60 * 24));
+    }
+
+    function getPeriodo(fechaStr) {
+        if (!fechaStr) return 'sin-fecha';
+        var diff = diffDias(fechaStr);
         if (diff < 0)   return 'vencidas';
         if (diff === 0) return 'hoy';
         if (diff === 1) return 'manana';
         if (diff <= 7)  return 'semana';
         if (diff <= 14) return 'proxima-semana';
         return 'futuro';
+    }
+
+    // Mismo texto que $diasStr en app/Views/acciones/index.php
+    function diasRelativosLabel(diff) {
+        if (diff === 0)  return 'hoy';
+        if (diff === 1)  return 'mañana';
+        if (diff > 1)    return 'en ' + diff + ' días';
+        if (diff === -1) return 'ayer';
+        return (-diff) + ' días pasada';
     }
 
     function escHTML(str) {
@@ -383,13 +421,18 @@
                     ' <span class="fw-normal opacity-75">(' + g.items.length + ')</span></div>';
 
             g.items.forEach(function (el) {
-                var titulo    = (el.querySelector('.item-text') || {}).textContent || '';
-                var fecha     = el.dataset.fechaAccion || '';
-                var tipoTiem  = el.dataset.tipoTiempo  || '';
-                var horaInicio = el.dataset.horaInicio || '';
-                var ctx       = el.querySelector('.tag-ctx');
-                var area      = el.querySelector('.tag-area');
-                var proj      = el.querySelector('.tag-proj');
+                var id         = el.dataset.id;
+                var titulo     = (el.querySelector('.item-text') || {}).textContent || '';
+                var fecha      = el.dataset.fechaAccion || '';
+                var tipoTiem   = el.dataset.tipoTiempo  || '';
+                var horaInicio = el.dataset.horaInicio  || '';
+
+                // Mismos datos y acciones que la fila de lista: el botón
+                // Editar (con Borrar dentro del modal) y el panel de info
+                // (breadcrumb + horas + notas) se clonan tal cual desde el
+                // ítem correspondiente de #acciones-lista.
+                var btnEditOrig  = el.querySelector('.btn-edit');
+                var infoBodyOrig = el.querySelector('.acciones-item-info-body');
 
                 var fechaLabel = '';
                 if (fecha) {
@@ -399,27 +442,53 @@
                     }
                 }
 
-                html += '<div class="agenda-item d-flex align-items-start gap-2 mb-2 p-2 rounded"' +
-                        ' style="background:#f8f8fc">' +
-                    '<div class="flex-grow-1">' +
-                        '<div class="fw-medium" style="font-size:.9rem">' +
-                        escHTML(titulo.trim()) + '</div>' +
-                        '<div class="d-flex flex-wrap gap-1 mt-1">';
+                html += '<div class="agenda-item mb-2 p-2 rounded" style="background:#f8f8fc" data-id="' + id + '">';
+                html +=     '<div class="d-flex align-items-center gap-2">';
+                html +=         '<div class="flex-grow-1">';
+                html +=             '<div class="agenda-item-titulo fw-medium" style="font-size:.9rem">' +
+                                    escHTML(titulo.trim()) + '</div>';
+                html +=             '<div class="d-flex flex-wrap gap-1 mt-1">';
 
+                // Frente de la tarjeta = mismo contenido que la fila de lista
+                // (título + chip de fecha + chip de días relativos).
+                // Contexto/área/proyecto viven solo en el panel Info.
                 if (fechaLabel) {
                     html += '<span class="tag ' +
                             (key === 'vencidas' ? 'tag-alert' : 'tag-date') +
                             '">' + escHTML(fechaLabel) + '</span>';
-                }
-                if (ctx)  html += ctx.outerHTML;
-                if (area) html += area.outerHTML;
-                if (proj) html += proj.outerHTML;
 
-                html += '</div></div>' +
-                    '<button class="btn btn-sm btn-done agenda-btn-hecho flex-shrink-0"' +
-                    ' data-item-id="' + el.dataset.id + '"' +
-                    ' style="font-size:.75rem;padding:3px 8px">✓ Hecho</button>' +
-                    '</div>';
+                    var diasLabel = diasRelativosLabel(diffDias(fecha));
+                    var diasEstilo = key === 'vencidas'
+                        ? 'background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;'
+                        : (key === 'hoy'
+                            ? 'background:#fef9c3;color:#854d0e;border:1px solid #fde047;'
+                            : 'background:#f0fdf4;color:#166534;border:1px solid #86efac;');
+                    html += '<span class="tag" style="font-size:.66rem;' + diasEstilo + '">' +
+                            escHTML(diasLabel) + '</span>';
+                }
+
+                html +=             '</div>';
+                html +=         '</div>'; // /flex-grow-1
+
+                html +=         '<div class="d-flex align-items-center gap-1 flex-shrink-0">';
+                html +=             '<button class="btn-toggle-info" type="button"' +
+                                    ' data-bs-toggle="collapse"' +
+                                    ' data-bs-target="#agenda-info-' + id + '"' +
+                                    ' aria-expanded="false"' +
+                                    ' aria-controls="agenda-info-' + id + '"' +
+                                    ' aria-label="Ver más información">' +
+                                    '<i class="bi bi-chevron-down info-chevron"></i></button>';
+                html +=             '<button class="btn-check-circular" data-item-id="' + id + '"' +
+                                    ' aria-label="Marcar como hecho">' +
+                                    '<i class="bi bi-check-lg"></i></button>';
+                if (btnEditOrig) html += btnEditOrig.outerHTML;
+                html +=         '</div>';
+                html +=     '</div>'; // /d-flex fila
+
+                html +=     '<div id="agenda-info-' + id + '" class="collapse agenda-item-info">' +
+                            (infoBodyOrig ? infoBodyOrig.outerHTML : '') +
+                            '</div>';
+                html += '</div>'; // /.agenda-item
             });
 
             html += '</div>';
@@ -430,36 +499,6 @@
         }
 
         agendaEl.innerHTML = html;
-
-        // Botones "Hecho" dentro del modo agenda
-        agendaEl.querySelectorAll('.agenda-btn-hecho').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                var id = btn.dataset.itemId;
-                btn.disabled = true;
-                fetch('/acciones/completar', {
-                    method:  'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body:    'id=' + encodeURIComponent(id),
-                })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (data.ok) {
-                        var agendaItem = btn.closest('.agenda-item');
-                        if (agendaItem) {
-                            agendaItem.style.transition = 'opacity .25s';
-                            agendaItem.style.opacity    = '0';
-                            setTimeout(function () { agendaItem.remove(); }, 260);
-                        }
-                        // Quitar también del DOM original para que el contador sea correcto
-                        var orig = listaEl.querySelector('[data-id="' + id + '"]');
-                        if (orig) orig.remove();
-                    } else {
-                        btn.disabled = false;
-                    }
-                })
-                .catch(function () { btn.disabled = false; });
-            });
-        });
     }
 
     // ── Toggle lista ↔ agenda ────────────────────────────

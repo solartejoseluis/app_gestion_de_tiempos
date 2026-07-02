@@ -390,6 +390,15 @@ html, body { height: 100%; margin: 0; }
     padding: 10px 12px;
 }
 
+/* ── Modo agenda de /acciones (agrupado por período) ──── */
+.agenda-item-titulo {
+    color: #1a1a1a;
+}
+
+.agenda-item-info {
+    padding-top: 6px;
+}
+
 /* Chips de contexto */
 .filtro-ctx-chip {
     display: inline-block;
