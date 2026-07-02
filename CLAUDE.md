@@ -10,7 +10,7 @@ Aplicación de gestión de tiempos personal basada en GTD (Getting Things Done) 
 **Arquitectura:** MVC sin framework · Docker Compose (desarrollo) · cPanel (producción)  
 **Producción:** https://gtd.aurusmind.com (cPanel aurusmin, DB: aurusmin_gtd)  
 **Repo:** github.com/solartejoseluis/app_gestion_de_tiempos  
-**Último commit estable:** 8e0329b
+**Último commit estable:** 0f51ad1
 
 ---
 
@@ -121,6 +121,9 @@ Todos los módulos están completos y en producción:
 - **Captura en /inbox (mobile):** barra de captura `position: fixed` en la parte inferior, siempre visible. Botón de guardar como ícono (`bi-send-fill`, `aria-label="Guardar"`). Placeholder "¿Qué tienes en mente?". Botones Procesar/Borrar de cada ficha como íconos con `aria-label`/`title` (vista PHP y `crearElemento()` en inbox.js). Márgenes laterales igualados a /acciones (24px totales).
 - **Agenda grid semanal:** 7 columnas × 32 slots (05:00–21:00, 48px/slot). Bloques de tiempo (amarillo), acciones (violeta), citas (azul), completadas (verde). Línea hora actual.
 - **Agenda vista día:** grid de 1 columna, creación desde slot (mini-modal), modal detalle con completar/editar
+- **Modal de detalle y de creación unificados entre /agenda y /agenda/dia:** toda la lógica (antes duplicada inline por vista) vive en `public/js/agenda.js` compartido — scroll a hora actual, crear acción desde un slot del grid o desde la franja "todo el día", modal de detalle (completar/editar/cerrar), sincronización con `accion:editada`. IDs del modal de detalle unificados entre ambas vistas (`det-*`, `modal-evento-detalle`), ya que cada vista es una página completa independiente (sin riesgo de colisión). Los chips de "todo el día" (`tipo_tiempo='dia'`, franja superior del calendario) abren el mismo modal de detalle que los eventos con hora, mostrando "Todo el día" en vez de un rango horario. Clic en área vacía de la franja (`data-fecha` en `.agenda-allday-col`) abre el modal de crear con los campos de hora ocultos y un hint ("Acción de todo el día, sin hora específica.") — mismo modal que el clic en un slot del grid, que sigue precargando la hora normalmente. El handler de la franja ignora explícitamente clics dentro de `.agenda-chip-allday` (activos o completados) vía `e.target.closest()`, sin depender solo de `stopPropagation()`. En `dia.php` el contenedor de la franja ahora siempre se renderiza (antes se omitía si no había ítems ese día), con `data-fecha`, para que exista área clicable incluso en días vacíos.
+  - ⚠️ **Fix:** `AgendaModel::getSemana()` no seleccionaba `contexto_id` ni `proyecto_id` (solo los nombres vía JOIN) — `data-contexto-id`/`data-proyecto-id` quedaban siempre vacíos, afectando también a los eventos con hora ya existentes (Editar no precargaba esos campos). Corregido.
+  - ⚠️ **Fix:** `AccionesController::crear()` nunca leía ni persistía `tipo_tiempo` (quedaba siempre `NULL` sin importar el flujo). Ahora se calcula en `agenda.js` según si se proporcionó hora (`'cita'`) o no (`'dia'`), y se valida en el backend con el mismo criterio que `ProcesamientoController::tipoTiempoValido()`.
 - **Plantilla semanal:** CRUD de bloques de tiempo recurrentes con días, horario, color, vigencia
 - **Recuperar/eliminar completadas:** ítems y proyectos con confirmación
 - **Responsive móvil completo:** sidebar hamburguesa, todas las vistas adaptadas, agenda con scroll horizontal
@@ -190,6 +193,7 @@ DB_USER=aurusmin_gtduser
 ## Deuda técnica
 
 - **Zona horaria en modo agenda de /acciones:** la agrupación por período (vencidas/hoy/mañana/semana/etc.) usa `new Date()` del navegador (zona horaria del cliente), mientras el resto de la vista usa el "hoy" calculado en el servidor (PHP). Puede causar que un ítem límite (ej. justo alrededor de medianoche) aparezca en el período incorrecto si el cliente está en una zona horaria distinta a la del servidor. No corregido — pendiente de definir alcance en otra fase.
+- **`/agenda/dia` no muestra completados sin hora en la franja "todo el día":** `$completadas` solo se pinta en el loop de "con hora" (`dia.php`); un ítem completado con `tipo_tiempo='dia'` no aparece en ningún lado de esa vista, a diferencia de `/agenda` (semanal) que sí lo hace. Gap preexistente, no corregido — pendiente de definir alcance en otra fase.
 
 ---
 
