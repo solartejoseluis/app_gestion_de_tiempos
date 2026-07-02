@@ -52,20 +52,26 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
   </div>
 
   <!-- ── Banda todo el día ──────────────────────────── -->
-  <?php if (!empty($sinHora)): ?>
-  <div style="padding:6px 12px;border-bottom:1px solid #e5e7eb;
-              display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+  <div class="agenda-allday-col"
+       data-fecha="<?= $fechaStr ?>"
+       style="padding:6px 12px;border-bottom:1px solid #e5e7eb;
+              display:flex;flex-wrap:wrap;gap:4px;align-items:center;min-height:32px">
     <span style="font-size:.65rem;color:#9ca3af;margin-right:4px">
         todo el día
     </span>
     <?php foreach ($sinHora as $item): ?>
         <div class="agenda-chip-allday"
+             data-id="<?= $item['id'] ?>"
+             data-titulo="<?= htmlspecialchars($item['titulo'], ENT_QUOTES) ?>"
+             data-area-id="<?= $item['area_id'] ?? '' ?>"
+             data-contexto-id="<?= $item['contexto_id'] ?? '' ?>"
+             data-proyecto-id="<?= $item['proyecto_id'] ?? '' ?>"
+             data-fecha="<?= $item['fecha_accion'] ?? '' ?>"
              title="<?= htmlspecialchars($item['titulo']) ?>">
             <?= htmlspecialchars(mb_substr($item['titulo'], 0, 30)) ?>
         </div>
     <?php endforeach; ?>
   </div>
-  <?php endif; ?>
 
   <!-- ── Grid de un día ────────────────────────────── -->
   <div class="agenda-scroll" id="agenda-scroll">
@@ -204,7 +210,12 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
                    placeholder="Título de la acción *"
                    maxlength="255">
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;
+        <p id="crear-agenda-hint-todo-dia" class="d-none"
+           style="font-size:.75rem;color:#6b7280;margin:-6px 0 12px">
+            <i class="bi bi-calendar-check me-1"></i>Acción de todo el día, sin hora específica.
+        </p>
+        <div id="crear-agenda-horas-wrapper"
+             style="display:grid;grid-template-columns:1fr 1fr;
                     gap:8px;margin-bottom:12px">
             <div>
                 <label style="font-size:.75rem;color:#6b7280">Hora inicio</label>
@@ -262,7 +273,7 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
 </div>
 
 <!-- Mini-modal: detalle evento ───────────────────────── -->
-<div id="modal-evento-detalle-dia"
+<div id="modal-evento-detalle"
      style="display:none;position:fixed;inset:0;z-index:2000;
             background:rgba(0,0,0,.4)"
      onclick="if(event.target===this)this.style.display='none'">
@@ -272,24 +283,24 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
                 box-shadow:0 8px 32px rgba(0,0,0,.18)">
 
         <!-- Vista detalle -->
-        <div id="det-dia-vista">
+        <div id="det-vista">
             <div style="display:flex;justify-content:space-between;
                         align-items:start;margin-bottom:12px">
-                <h6 id="det-dia-titulo"
+                <h6 id="det-titulo"
                     style="margin:0;font-size:.95rem;font-weight:600;flex:1"></h6>
-                <button onclick="document.getElementById('modal-evento-detalle-dia').style.display='none'"
+                <button onclick="document.getElementById('modal-evento-detalle').style.display='none'"
                         style="background:none;border:none;font-size:1.2rem;cursor:pointer">×</button>
             </div>
-            <p id="det-dia-hora"
+            <p id="det-hora"
                style="font-size:.82rem;color:#6b7280;margin:0 0 16px"></p>
             <div style="display:flex;gap:8px">
-                <button id="det-dia-btn-completar" class="btn btn-sm btn-success">
+                <button id="det-btn-completar" class="btn btn-sm btn-success">
                     ✓ Completar
                 </button>
-                <button id="det-dia-btn-editar" class="btn btn-sm btn-outline-primary">
+                <button id="det-btn-editar" class="btn btn-sm btn-outline-primary">
                     <i class="bi bi-pencil me-1"></i>Editar
                 </button>
-                <button onclick="document.getElementById('modal-evento-detalle-dia').style.display='none'"
+                <button onclick="document.getElementById('modal-evento-detalle').style.display='none'"
                         class="btn btn-sm btn-outline-secondary">
                     Cerrar
                 </button>
@@ -299,188 +310,4 @@ $horaToPx = static function (string $hora) use ($horaBase, $pxSlot): int {
     </div>
 </div>
 
-<script>
-(function () {
-    'use strict';
-
-    // ── Scroll a hora actual ─────────────────────────
-    var scroll = document.getElementById('agenda-scroll');
-    if (scroll) {
-        var ahora  = new Date();
-        var topNow = ((ahora.getHours() - 5) * 60 + ahora.getMinutes()) / 30 * 48;
-        scroll.scrollTop = Math.max(0, topNow - scroll.clientHeight / 3);
-    }
-
-    // ── Clic en slot vacío → modal crear ────────────
-    var modalCrear = document.getElementById('modal-crear-agenda');
-    document.querySelectorAll('.agenda-slot-line').forEach(function (line) {
-        line.style.pointerEvents = 'auto';
-        line.style.cursor        = 'pointer';
-        line.addEventListener('click', function (e) {
-            e.stopPropagation();
-            var slot   = parseInt(this.dataset.slot, 10);
-            var horaH  = 5 + Math.floor(slot / 2);
-            var horaM  = (slot % 2) * 30;
-            var horaIni = String(horaH).padStart(2, '0') + ':' + String(horaM).padStart(2, '0');
-            var horaFinH = horaH + (horaM === 30 ? 1 : 0);
-            var horaFinM = horaM === 30 ? 0 : 30;
-            if (horaFinM === 60) { horaFinH++; horaFinM = 0; }
-            var horaFin = String(horaFinH).padStart(2, '0') + ':' + String(horaFinM).padStart(2, '0');
-            document.getElementById('crear-agenda-hora-ini').value = horaIni;
-            document.getElementById('crear-agenda-hora-fin').value = horaFin;
-            document.getElementById('crear-agenda-titulo').value   = '';
-            document.getElementById('crear-agenda-error').classList.add('d-none');
-            if (modalCrear) modalCrear.style.display = 'block';
-            setTimeout(function () {
-                document.getElementById('crear-agenda-titulo').focus();
-            }, 100);
-        });
-    });
-
-    // ── Guardar nueva acción ─────────────────────────
-    var btnGuardar = document.getElementById('btn-crear-agenda-guardar');
-    if (btnGuardar) {
-        btnGuardar.addEventListener('click', function () {
-            var titulo   = document.getElementById('crear-agenda-titulo').value.trim();
-            var horaIni  = document.getElementById('crear-agenda-hora-ini').value;
-            var horaFin  = document.getElementById('crear-agenda-hora-fin').value;
-            var area     = document.getElementById('crear-agenda-area')?.value || '';
-            var contexto = document.getElementById('crear-agenda-contexto').value;
-            var proyecto = document.getElementById('crear-agenda-proyecto').value;
-            var fecha    = document.getElementById('crear-agenda-fecha').value;
-            var errEl    = document.getElementById('crear-agenda-error');
-
-            if (!titulo) {
-                errEl.textContent = 'El título es obligatorio.';
-                errEl.classList.remove('d-none');
-                return;
-            }
-            errEl.classList.add('d-none');
-            btnGuardar.disabled = true;
-
-            fetch('/acciones/crear', {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({
-                    titulo:       titulo,
-                    fecha_accion: fecha,
-                    hora_inicio:  horaIni,
-                    hora_fin:     horaFin,
-                    area_id:      area,
-                    contexto_id:  contexto,
-                    proyecto_id:  proyecto,
-                    tipo:         'accion',
-                }),
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (data.ok) {
-                    modalCrear.style.display = 'none';
-                    window.location.reload();
-                } else {
-                    errEl.textContent = data.error || 'Error al guardar.';
-                    errEl.classList.remove('d-none');
-                    btnGuardar.disabled = false;
-                }
-            })
-            .catch(function () {
-                errEl.textContent = 'Error de conexión.';
-                errEl.classList.remove('d-none');
-                btnGuardar.disabled = false;
-            });
-        });
-    }
-
-    // ── Clic en evento → modal detalle ──────────────
-    var modalDet = document.getElementById('modal-evento-detalle-dia');
-    document.querySelectorAll('.agenda-evento[data-id]').forEach(function (el) {
-        el.addEventListener('click', function (e) {
-            e.stopPropagation();
-            document.getElementById('det-dia-titulo').textContent =
-                (el.querySelector('.agenda-evento-titulo') || {}).textContent?.trim() || '';
-            document.getElementById('det-dia-hora').textContent =
-                (el.querySelector('.agenda-evento-hora') || {}).textContent?.trim() || '';
-            document.getElementById('det-dia-btn-completar').dataset.itemId = el.dataset.id;
-            if (modalDet) modalDet.style.display = 'block';
-        });
-    });
-
-    // ── Completar desde modal detalle ────────────────
-    var btnDetComp = document.getElementById('det-dia-btn-completar');
-    if (btnDetComp) {
-        btnDetComp.addEventListener('click', function () {
-            var btn = this;
-            var id  = btn.dataset.itemId;
-            if (!id) return;
-            btn.disabled = true;
-            fetch('/acciones/completar', {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'id=' + encodeURIComponent(id),
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (data.ok) {
-                    if (modalDet) modalDet.style.display = 'none';
-                    var ev = document.querySelector('.agenda-evento[data-id="' + id + '"]');
-                    if (ev) ev.className = 'agenda-evento tipo-completada';
-                } else {
-                    btn.disabled = false;
-                }
-            })
-            .catch(function () { btn.disabled = false; });
-        });
-    }
-
-    // ── Botón Editar → modal global ──────────────────────────
-    var diaBtnEditar = document.getElementById('det-dia-btn-editar');
-    if (diaBtnEditar) {
-        diaBtnEditar.addEventListener('click', function () {
-            var id = document.getElementById('det-dia-btn-completar').dataset.itemId;
-            var ev = document.querySelector('.agenda-evento[data-id="' + id + '"]');
-            document.getElementById('modal-evento-detalle-dia').style.display = 'none';
-            if (ev && window.abrirModalEditar) {
-                window.abrirModalEditar({
-                    id:         ev.dataset.id,
-                    titulo:     ev.dataset.titulo     || '',
-                    areaId:     ev.dataset.areaId     || '',
-                    contextoId: ev.dataset.contextoId || '',
-                    proyectoId: ev.dataset.proyectoId || '',
-                    fecha:      ev.dataset.fecha      || '',
-                    horaInicio: ev.dataset.horaIni    || '',
-                    horaFin:    ev.dataset.horaFin    || '',
-                });
-            }
-        });
-    }
-
-    // ── Actualizar DOM del grid tras edición ─────────────────
-    document.addEventListener('accion:editada', function (e) {
-        var d  = e.detail;
-        var ev = document.querySelector('.agenda-evento[data-id="' + d.id + '"]');
-        if (!ev) return;
-        var tEl = ev.querySelector('.agenda-evento-titulo');
-        var hEl = ev.querySelector('.agenda-evento-hora');
-        if (tEl) tEl.textContent = d.titulo;
-        if (hEl && d.horaInicio) hEl.textContent = d.horaInicio + (d.horaFin ? ' – ' + d.horaFin : '');
-        ev.dataset.titulo     = d.titulo;
-        ev.dataset.areaId     = d.areaId     || '';
-        ev.dataset.contextoId = d.contextoId || '';
-        ev.dataset.proyectoId = d.proyectoId || '';
-        ev.dataset.fecha      = d.fecha      || '';
-        ev.dataset.horaIni    = d.horaInicio || '';
-        ev.dataset.horaFin    = d.horaFin    || '';
-        if (d.horaInicio) {
-            var horaPx = function (h) {
-                var p = h.split(':');
-                return ((parseInt(p[0], 10) - 5) * 60 + parseInt(p[1], 10)) / 30 * 48;
-            };
-            var newTop    = horaPx(d.horaInicio);
-            var newBottom = d.horaFin ? horaPx(d.horaFin) : newTop + 48;
-            ev.style.top    = newTop + 'px';
-            ev.style.height = Math.max(newBottom - newTop, 48) + 'px';
-        }
-    });
-
-}());
-</script>
+<script src="/js/agenda.js"></script>

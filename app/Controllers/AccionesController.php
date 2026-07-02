@@ -185,6 +185,11 @@ class AccionesController extends Controller
         $this->json(null);
     }
 
+    private function tipoTiempoValido(string $valor): string
+    {
+        return in_array($valor, ['ninguno', 'dia', 'cita'], true) ? $valor : 'ninguno';
+    }
+
     public function crear(): void
     {
         $this->requireAuth();
@@ -192,6 +197,7 @@ class AccionesController extends Controller
 
         $titulo     = trim($this->input('titulo', ''));
         $fecha      = trim($this->input('fecha_accion', ''));
+        $tipoTiempo = $this->tipoTiempoValido($this->input('tipo_tiempo', 'ninguno'));
         $horaIni    = trim($this->input('hora_inicio', '')) ?: null;
         $horaFin    = trim($this->input('hora_fin', ''))    ?: null;
         $contextoId = (int) $this->input('contexto_id', 0)  ?: null;
@@ -207,11 +213,11 @@ class AccionesController extends Controller
         $db = Database::connection();
         $db->prepare('
             INSERT INTO items
-            (usuario_id, titulo, tipo, fecha_accion,
+            (usuario_id, titulo, tipo, fecha_accion, tipo_tiempo,
              hora_inicio, hora_fin, contexto_id, proyecto_id, area_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ')->execute([
-            $uid, $titulo, $tipo, $fecha ?: null,
+            $uid, $titulo, $tipo, $fecha ?: null, $tipoTiempo,
             $horaIni, $horaFin, $contextoId, $proyectoId, $areaId,
         ]);
 

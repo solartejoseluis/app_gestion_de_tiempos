@@ -17,7 +17,8 @@ class AgendaModel
         $sqlItems = "
             SELECT i.id, i.titulo, i.tipo, i.tipo_tiempo,
                    i.fecha_accion, i.hora_inicio, i.hora_fin, i.fecha_cita,
-                   i.bloque_id, i.area_id, i.duracion_minutos,
+                   i.bloque_id, i.area_id, i.contexto_id, i.proyecto_id,
+                   i.duracion_minutos,
                    c.nombre AS contexto_nombre, c.color AS contexto_color,
                    p.nombre AS proyecto_nombre,
                    a.nombre AS area_nombre, a.color AS area_color
