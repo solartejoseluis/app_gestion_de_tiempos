@@ -65,6 +65,11 @@
             </div>
             <div class="modal-footer border-0 pt-0">
                 <button type="button"
+                        id="btn-borrar-editar"
+                        class="btn btn-sm btn-outline-danger me-auto">
+                    <i class="bi bi-trash me-1"></i>Borrar
+                </button>
+                <button type="button"
                         class="btn btn-sm btn-outline-secondary"
                         data-bs-dismiss="modal">Cancelar</button>
                 <button type="button"

@@ -157,6 +157,19 @@
         }
     });
 
+    document.addEventListener('accion:eliminada', function (e) {
+        var fila = lista.querySelector('.acciones-item[data-id="' + e.detail.id + '"]');
+        if (fila) fila.remove();
+        actualizarContador();
+
+        var badge = document.getElementById('sidebar-acciones-badge');
+        if (badge) {
+            var n = parseInt(badge.textContent, 10) - 1;
+            badge.textContent = Math.max(0, n);
+            badge.classList.toggle('d-none', n <= 0);
+        }
+    });
+
 })();
 
 // ── Notas inline ─────────────────────────────────────────────────

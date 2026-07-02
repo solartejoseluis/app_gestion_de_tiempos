@@ -151,4 +151,56 @@
         });
     }
 
+    var btnBorrar = document.getElementById('btn-borrar-editar');
+    if (btnBorrar) {
+        btnBorrar.addEventListener('click', function () {
+            if (!window.confirmarAccion) return;
+
+            window.confirmarAccion(
+                'Se eliminará esta acción permanentemente. ¿Continuar?',
+                function () {
+                    if (!modalEl) modalEl = document.getElementById('modalEditarAccion');
+
+                    var textoOrig      = btnBorrar.innerHTML;
+                    btnBorrar.disabled = true;
+                    btnBorrar.innerHTML = '<i class="bi bi-hourglass me-1"></i>Borrando...';
+
+                    var elErr = document.getElementById('edit-error');
+
+                    fetch('/acciones/' + encodeURIComponent(currentId), {
+                        method:  'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body:    new URLSearchParams({ _method: 'DELETE' }),
+                    })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data.ok) {
+                            document.dispatchEvent(new CustomEvent('accion:eliminada', {
+                                detail: { id: currentId },
+                            }));
+                            btnBorrar.disabled  = false;
+                            btnBorrar.innerHTML = textoOrig;
+                            bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                        } else {
+                            btnBorrar.disabled  = false;
+                            btnBorrar.innerHTML = textoOrig;
+                            if (elErr) {
+                                elErr.textContent = data.error || 'Error al borrar.';
+                                elErr.classList.remove('d-none');
+                            }
+                        }
+                    })
+                    .catch(function () {
+                        btnBorrar.disabled  = false;
+                        btnBorrar.innerHTML = textoOrig;
+                        if (elErr) {
+                            elErr.textContent = 'Error de conexión.';
+                            elErr.classList.remove('d-none');
+                        }
+                    });
+                }
+            );
+        });
+    }
+
 }());

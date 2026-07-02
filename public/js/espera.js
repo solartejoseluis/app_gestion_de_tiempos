@@ -134,6 +134,12 @@
         }
     });
 
+    document.addEventListener('accion:eliminada', (e) => {
+        const fila = lista.querySelector(`.espera-item[data-id="${e.detail.id}"]`);
+        if (fila) fila.remove();
+        actualizarContador();
+    });
+
 })();
 
 // ── Notas inline ─────────────────────────────────────────
