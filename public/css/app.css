@@ -298,7 +298,96 @@ html, body { height: 100%; margin: 0; }
 .acciones-lista {
     flex: 1;
     overflow-y: auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     padding: 14px 24px;
+}
+
+/* ── Layout de columnas (lista de /acciones) ──────────── */
+.acciones-columnas {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 14px;
+    margin-bottom: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #999;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    background: #ffffff;
+    z-index: 2;
+    min-width: 560px;
+}
+
+.acciones-columnas .sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.acciones-columnas .sort-icon {
+    font-size: 0.8rem;
+    margin-left: 2px;
+}
+
+.col-creada {
+    flex: 0 0 68px;
+    font-size: 0.78rem;
+    color: #999;
+}
+
+.col-accion { flex: 1 1 auto; min-width: 140px; }
+.col-fecha  { flex: 0 0 120px; }
+
+.col-info,
+.col-hecho,
+.col-editar {
+    flex: 0 0 30px;
+    display: flex;
+    justify-content: center;
+}
+
+.acciones-item-col {
+    min-width: 560px;
+}
+
+.acciones-item-fila {
+    border-left: 2px solid transparent;
+}
+
+.acciones-item.item-vencida .acciones-item-fila {
+    border-left-color: #E24B4A;
+}
+
+.btn-toggle-info {
+    border: none;
+    background: transparent;
+    color: #999;
+    padding: 2px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.info-chevron {
+    transition: transform 0.2s;
+}
+
+.btn-toggle-info.collapsed .info-chevron {
+    transform: rotate(-90deg);
+}
+
+.acciones-item-info {
+    padding: 0 14px 10px 82px;
+}
+
+.acciones-item-info-body {
+    background: #fafafa;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    padding: 10px 12px;
 }
 
 /* Chips de contexto */
@@ -332,12 +421,18 @@ html, body { height: 100%; margin: 0; }
     flex-shrink: 0;
     cursor: pointer;
     padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #AFA9EC;
+    font-size: 0.7rem;
     transition: background 0.1s, border-color 0.1s;
 }
 
 .btn-check-circular:hover {
     background: #EEEDFE;
     border-color: #534AB7;
+    color: #534AB7;
 }
 
 /* Ítem de acción */
@@ -888,6 +983,48 @@ hr.proc-separator {
         flex-wrap: wrap;
         gap: 6px;
         margin-top: 8px;
+    }
+
+    /* El layout de columnas de /acciones no usa el padding de tarjeta —
+       su padding vive en .acciones-item-fila (ver regla base). */
+    .acciones-item.acciones-item-col {
+        padding: 0;
+    }
+
+    /* La regla .item de arriba fuerza flex-direction: column para el
+       layout de tarjeta antiguo (inbox/espera/someday). El layout de
+       columnas de /acciones (mismo patrón que /agenda) debe mantenerse
+       en fila horizontal con scroll-x, no apilarse. */
+    .acciones-item-fila {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+    }
+
+    .acciones-columnas {
+        padding: 6px 10px;
+    }
+
+    .col-creada {
+        flex-basis: 52px;
+        font-size: .7rem;
+    }
+
+    .col-accion {
+        min-width: 110px;
+    }
+
+    .col-fecha {
+        flex-basis: 96px;
+    }
+
+    .acciones-item-fila .item-text {
+        font-size: .82rem;
+    }
+
+    .acciones-item-info {
+        padding: 0 10px 10px 10px;
     }
 
     /* Notas inline — ancho completo en móvil */

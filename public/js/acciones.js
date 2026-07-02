@@ -34,6 +34,74 @@
         actualizarContador();
     }
 
+    // ── Ordenamiento por columnas ───────────────────────────────
+    // Mismo mecanismo que /config (data-* + Array.sort() + reordenar
+    // con appendChild), adaptado a un contenedor flex en vez de <table>.
+    const columnasHeader = document.querySelector('.acciones-columnas');
+    let sortCol = 'creada';
+    let sortDir = 'desc';
+
+    function compararColumna(col, a, b) {
+        var va, vb;
+
+        if (col === 'accion') {
+            va = (a.dataset.titulo || '').toLowerCase();
+            vb = (b.dataset.titulo || '').toLowerCase();
+            return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+        }
+
+        if (col === 'fecha') {
+            va = a.dataset.fechaAccion || '';
+            vb = b.dataset.fechaAccion || '';
+            if (!va && !vb) return 0;
+            if (!va) return 1;  // sin fecha siempre al final
+            if (!vb) return -1;
+            return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+        }
+
+        // 'creada' (por defecto)
+        va = a.dataset.createdAt || '';
+        vb = b.dataset.createdAt || '';
+        return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+    }
+
+    function ordenarPor(col, forzarDir) {
+        if (forzarDir) {
+            sortDir = forzarDir;
+        } else if (sortCol === col) {
+            sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortDir = 'asc';
+        }
+        sortCol = col;
+
+        if (columnasHeader) {
+            columnasHeader.querySelectorAll('.sort-icon').forEach(s => {
+                s.textContent = '↕';
+                s.classList.remove('text-primary');
+                s.classList.add('text-muted');
+            });
+            const activo = columnasHeader.querySelector('[data-col="' + col + '"] .sort-icon');
+            if (activo) {
+                activo.textContent = sortDir === 'asc' ? '↑' : '↓';
+                activo.classList.remove('text-muted');
+                activo.classList.add('text-primary');
+            }
+        }
+
+        const filas = [...getItems()].sort((a, b) => compararColumna(col, a, b));
+        filas.forEach(fila => lista.appendChild(fila));
+    }
+
+    columnasHeader?.addEventListener('click', (e) => {
+        const th = e.target.closest('.sortable');
+        if (!th) return;
+        ordenarPor(th.dataset.col);
+    });
+
+    // Orden inicial por defecto: Creada, descendente
+    ordenarPor('creada', 'desc');
+
     // ── Chips de contexto ─────────────────────────────────────
     document.querySelectorAll('.filtro-ctx-chip').forEach(chip => {
         chip.addEventListener('click', () => {
@@ -82,9 +150,9 @@
 
     // ── Completar acción ──────────────────────────────────────
     async function completarAccion(id, btnEl) {
-        const textoOrig   = btnEl.textContent.trim();
-        btnEl.disabled    = true;
-        btnEl.textContent = '...';
+        const origHtml = btnEl.innerHTML;
+        btnEl.disabled  = true;
+        btnEl.innerHTML = '<i class="bi bi-hourglass"></i>';
 
         try {
             const res  = await fetch('/acciones/completar', {
@@ -105,12 +173,12 @@
                     badge.classList.toggle('d-none', n <= 0);
                 }
             } else {
-                btnEl.disabled    = false;
-                btnEl.textContent = textoOrig;
+                btnEl.disabled  = false;
+                btnEl.innerHTML = origHtml;
             }
         } catch {
-            btnEl.disabled    = false;
-            btnEl.textContent = textoOrig;
+            btnEl.disabled  = false;
+            btnEl.innerHTML = origHtml;
         }
     }
 
@@ -145,6 +213,15 @@
         if (!fila) return;
         var textoEl = fila.querySelector('.item-text');
         if (textoEl) textoEl.textContent = d.titulo;
+
+        // Mantener sincronizados los data-* usados por filtros/orden/modo agenda
+        fila.dataset.titulo      = d.titulo;
+        fila.dataset.areaId      = d.areaId      || '';
+        fila.dataset.contextoId  = d.contextoId  || '';
+        fila.dataset.proyectoId  = d.proyectoId  || '';
+        fila.dataset.fechaAccion = d.fecha        || '';
+        fila.dataset.horaInicio  = d.horaInicio   || '';
+
         var btnEdit = fila.querySelector('.btn-edit');
         if (btnEdit) {
             btnEdit.dataset.titulo      = d.titulo;
