@@ -10,7 +10,7 @@ Aplicación de gestión de tiempos personal basada en GTD (Getting Things Done) 
 **Arquitectura:** MVC sin framework · Docker Compose (desarrollo) · cPanel (producción)  
 **Producción:** https://gtd.aurusmind.com (cPanel aurusmin, DB: aurusmin_gtd)  
 **Repo:** github.com/solartejoseluis/app_gestion_de_tiempos  
-**Último commit estable:** a9ee135
+**Último commit estable:** 8e0329b
 
 ---
 
@@ -110,9 +110,13 @@ Todos los módulos están completos y en producción:
 ## Funcionalidades implementadas
 
 - **Chip de fecha mejorado:** día de semana + hora (si cita) + días restantes/pasados — en todas las vistas. Fuente de la hora: `hora_inicio` (columna TIME), no `fecha_cita`.
-- **Modo agenda en /acciones:** toggle lista/agenda por período temporal (hoy, mañana, esta semana, etc.). Lee `data-hora-inicio` del ítem para el label de hora.
+- **Vista /acciones en columnas:** layout de lista Creada | Acción | Fecha | Info | Hecho | Editar (reemplaza las tarjetas apiladas anteriores). Aplica igual en mobile y desktop, con scroll horizontal en pantallas angostas (mismo patrón que /agenda). Ordenamiento client-side por columna (Creada, Acción, Fecha) con íconos de dirección — mismo mecanismo que /config (data-* + Array.sort() + reordenar con appendChild). Orden por defecto: Creada descendente; persiste al aplicar filtros. Botón "Info" expandible por fila revela breadcrumb (área › contexto › proyecto), notas y hora inicio–fin. Botones Hecho/Editar consolidados a ícono-solo (mismo patrón que /proyectos). AccionModel sin cambios de columnas — `proyecto_color` no existe en la tabla `proyectos`.
+- **Modo agenda en /acciones:** toggle lista/agenda por período temporal (vencidas, hoy, mañana, esta semana, próxima semana, más adelante, sin fecha). Unificado con la lista: el frente de cada tarjeta muestra exactamente lo mismo que la fila de lista (título + chip de fecha + chip de días relativos, mismos colores condicionales rojo/amarillo/verde) — contexto/área/proyecto ya NO aparecen en el frente (redundante con el filtro superior), solo dentro de "Info". Mismo panel Info expandible, mismo botón Editar (con Borrar) y mismo botón Hecho (`.btn-check-circular`) que la lista, reutilizando el HTML ya renderizado por PHP vía `outerHTML` en vez de duplicar lógica de renderizado en JS — garantiza paridad exacta de datos entre ambos modos. Delegación de eventos centralizada en `.acciones-wrapper` (contenedor común de lista y agenda) para que los elementos clonados en agenda disparen la misma lógica. Lee `data-hora-inicio` del ítem para el label de hora.
 - **Notas inline:** autoguardado con debounce en /acciones, /proyectos/{id}/acciones, /espera, /someday
-- **Modal de edición unificado:** componente global en dashboard con 7 campos (título, área, contexto, proyecto, fecha, hora inicio, hora fin). JS: public/js/editar_accion.js, window.abrirModalEditar(config), evento accion:editada. Usado en /acciones, /proyectos/{id}/acciones y /espera (botón "Editar" en cada vista). Limitación conocida: el listener de accion:editada solo refresca título y dataset del botón — el chip visual de fecha/hora no se actualiza sin recargar la página (el dato en BD sí queda correcto de inmediato).
+- **Modal de edición unificado:** componente global en dashboard con 7 campos (título, área, contexto, proyecto, fecha, hora inicio, hora fin) + botón "Borrar" en el footer. JS: public/js/editar_accion.js, window.abrirModalEditar(config), eventos accion:editada y accion:eliminada. Usado en /acciones (lista y modo agenda) y /espera (botón "Editar" en cada vista). Escuchado por acciones.js y espera.js. Limitación conocida: el listener de accion:editada solo refresca título y dataset del botón — el chip visual de fecha/hora no se actualiza sin recargar la página (el dato en BD sí queda correcto de inmediato).
+  - ⚠️ **Corrección:** `/proyectos/{id}/acciones` NO usa este modal (nunca lo usó, a pesar de una mención incorrecta previa en este archivo). Tiene su propio flujo de borrado independiente: botón `.btn-eliminar-accion` + modal propio `#modalConfirmarEliminarAccion` (ver app/Views/proyectos/acciones.php). No tiene botón "Editar".
+- **Borrar acción (modal unificado):** botón "Borrar" en modal_editar_accion.php usa window.confirmarAccion() y hace DELETE /acciones/{id}. Al confirmar, dispara accion:eliminada (mismo patrón que accion:editada) para que la vista que lo abrió remueva el ítem del DOM sin recargar.
+- **Confirmación global:** app/Views/components/modal_confirmar.php + public/js/confirmar.js — window.confirmarAccion(texto, callback, opciones), con opciones = { titulo, textoBoton } opcional. Extraído del código antes duplicado en /completadas; /completadas ahora usa el componente global en vez de su copia inline.
 - **Fecha + hora en modal de procesamiento:** los flujos Programar y Delegar (modal_procesamiento.php) capturan fecha (`type="date"`) y hora inicio/fin (`type="time"`) como campos separados, mismo patrón que el modal de edición. `ProcesamientoController` usa el helper privado `horaONull()` (mismo patrón que `fechaONull()`) en `programar()`, `delegar()` y `nuevaAccion()`.
 - **Captura en /inbox (mobile):** barra de captura `position: fixed` en la parte inferior, siempre visible. Botón de guardar como ícono (`bi-send-fill`, `aria-label="Guardar"`). Placeholder "¿Qué tienes en mente?". Botones Procesar/Borrar de cada ficha como íconos con `aria-label`/`title` (vista PHP y `crearElemento()` en inbox.js). Márgenes laterales igualados a /acciones (24px totales).
 - **Agenda grid semanal:** 7 columnas × 32 slots (05:00–21:00, 48px/slot). Bloques de tiempo (amarillo), acciones (violeta), citas (azul), completadas (verde). Línea hora actual.
@@ -123,13 +127,15 @@ Todos los módulos están completos y en producción:
 - **Caché de selects:** en procesamiento.js (_cache) y editar_accion.js (_cacheEdit)
 - **Ordenamiento por columnas:** client-side en tabla de áreas (config)
 - **Descripción de áreas:** campo editable inline con autoguardado
+- **Vista /proyectos — mobile y botones:** márgenes mobile igualados a /acciones (header y lista, 24px totales). Botones "Ver acciones", "Agregar acción", "Pausar", "Reactivar", "Completar" son ícono-solo con `aria-label` (sin tooltip — mobile no lo soporta de forma confiable). Botón global para colapsar/expandir todas las categorías (áreas + "Proyectos completados") vía `bootstrap.Collapse` nativo — estado inicial: todas colapsadas; clase compartida `.proyecto-area-collapse` marca qué contenedores responden al control (`#btn-toggle-areas` en public/js/proyectos.js).
 
 ---
 
 ## Componentes globales (en dashboard.php)
 
 - `app/Views/components/modal_procesamiento.php` + `public/js/procesamiento.js`
-- `app/Views/components/modal_editar_accion.php` + `public/js/editar_accion.js`
+- `app/Views/components/modal_editar_accion.php` + `public/js/editar_accion.js` — incluye botón "Borrar" (dispara `accion:eliminada`)
+- `app/Views/components/modal_confirmar.php` + `public/js/confirmar.js` — `window.confirmarAccion(texto, callback, opciones?)`, `opciones` acepta `{ titulo, textoBoton }`
 
 **Endpoints de selects reutilizables (POST):**
 - /procesar/areas · /procesar/contextos · /procesar/proyectos · /procesar/personas
@@ -152,8 +158,11 @@ La clase CSS del evento (`tipo-cita` azul vs `tipo-accion` violeta) se determina
 - Delegación de eventos sobre contenedor padre
 - fetchCached(key, url) para selects — evita requests repetidos
 - window.abrirModalEditar(config) — función global para editar cualquier acción
+- window.confirmarAccion(texto, callback, opciones?) — función global para confirmar acciones destructivas
 - document.dispatchEvent(new CustomEvent('accion:editada', {detail})) — comunicación entre módulos
+- document.dispatchEvent(new CustomEvent('accion:eliminada', {detail: {id}})) — mismo patrón que accion:editada, tras borrar desde el modal unificado
 - Scroll automático en agenda: scrollTop = top - clientHeight/3
+- Reutilizar HTML ya renderizado por PHP vía `.outerHTML` al construir vistas alternativas en JS (ej. modo agenda de /acciones clona `.btn-edit` y `.acciones-item-info-body` desde el DOM de lista) en vez de duplicar lógica de renderizado — garantiza paridad exacta de datos entre vistas
 
 ---
 
@@ -175,6 +184,12 @@ APP_DEBUG=false
 DB_HOST=localhost
 DB_NAME=aurusmin_gtd
 DB_USER=aurusmin_gtduser
+
+---
+
+## Deuda técnica
+
+- **Zona horaria en modo agenda de /acciones:** la agrupación por período (vencidas/hoy/mañana/semana/etc.) usa `new Date()` del navegador (zona horaria del cliente), mientras el resto de la vista usa el "hoy" calculado en el servidor (PHP). Puede causar que un ítem límite (ej. justo alrededor de medianoche) aparezca en el período incorrecto si el cliente está en una zona horaria distinta a la del servidor. No corregido — pendiente de definir alcance en otra fase.
 
 ---
 
